@@ -1,0 +1,10 @@
+
+
+services:
+  backend:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./secrets:/app/secrets

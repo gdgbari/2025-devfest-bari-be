@@ -1,10 +1,14 @@
-# Compiled JavaScript files
-lib/**/*.js
-lib/**/*.js.map
+**/*.pyc
+.venv/
+backend/.locks/**
+**/__pycache__/
+**/__pycache__/**
+Pipfile
+Pipfile.lock
+*.lock
+!uv.lock
+firebase-keys.json
 
-# TypeScript v1 declaration files
-typings/
-
-# Node.js dependency directory
-node_modules/
-*.local
+#Delete all but keep folder
+secrets/**/*
+!secrets/.gitkeep
