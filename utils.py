@@ -70,7 +70,13 @@ def get_current_user(creds: HTTPAuthorizationCredentials = Depends(token_auth_sc
 
 async def get_user_info(user_token:UserToken = Depends(get_current_user)) -> User:
     additional_info = await db.collection("users").document(user_token.uid).get()
-    return User.model_validate({**user_token.model_dump(), **(fire_to_dict(additional_info))})
+    user_db_info = fire_to_dict(additional_info)
+    if not user_db_info:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User not correctly registered",
+        )
+    return User.model_validate({**user_token.model_dump(), **user_db_info})
 
 def has_privileges(min_role: UserRole):
     def _has_privileges(user: User = Depends(get_user_info)):
@@ -94,12 +100,15 @@ def fire_to_dict(data: QueryResultsList[DocumentSnapshot], id_as_key: str|None =
     def _doc_to_dict(ele: DocumentSnapshot):
         original_id = ele.id
         ele = ele.to_dict()
+        if ele is None:
+            return None
         if id_as_key:
             ele[id_as_key] = original_id
         for key, value in ele.items():
             if isinstance(value, AsyncDocumentReference):
                 ele[key] = value.id
         return ele
+    print("data:", data)
     if isinstance(data, DocumentSnapshot):
         return _doc_to_dict(data)
     elif isinstance(data, list) or isinstance(data, QueryResultsList):

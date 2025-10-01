@@ -43,7 +43,10 @@ api = APIRouter(
             "description": "Authentication Error",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Not authenticated"},
+                    "example": [
+                        {"detail": "Not authenticated"},
+                        {"detail": "User not correctly registered"}
+                    ],
                     "schema": {"type": "object", "properties": {"detail": {"type": "string"}}}
                 }
             }
