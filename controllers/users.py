@@ -1,4 +1,5 @@
+from exceptions import FeatureNotImplementedError
 from models.user import RegistrationRequest
 
 def register_user(form: RegistrationRequest):
-    raise NotImplementedError("Registration not implemented yet")
+    raise FeatureNotImplementedError(message="User registration not implemented yet")
