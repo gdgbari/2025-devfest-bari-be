@@ -14,7 +14,31 @@ app = FastAPI(
     redoc_url=None,
     docs_url="/api/docs",
     version=env.VERSION,
-    title="Devfest Bari Backend"
+    title="Devfest Bari Backend",
+    responses={
+        403: {
+            "description": "Authentication Error",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {"detail": "Not authenticated"},
+                        {"detail": "User not correctly registered"}
+                    ],
+                    "schema": {"type": "object", "properties": {"detail": {"type": "string"}}}
+                }
+            }
+        },
+        401: {
+            "description": "You don't have the required privileges to access this resource",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "You don't have the required privileges to access this resource"},
+                    "schema": {"type": "object", "properties": {"detail": {"type": "string"}}}
+                }
+            }
+        }
+    }
+
 )
 
 # This middleware allows requests like /path/ to be redirected to /path

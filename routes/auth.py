@@ -6,7 +6,7 @@ from controllers.users import register_user
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/sign-up", response_model=OkResponse, responses={
+@router.post("/register", response_model=OkResponse, responses={
     400: {
         "description": "Registration failed",
         "content": {

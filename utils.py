@@ -108,7 +108,6 @@ def fire_to_dict(data: QueryResultsList[DocumentSnapshot], id_as_key: str|None =
             if isinstance(value, AsyncDocumentReference):
                 ele[key] = value.id
         return ele
-    print("data:", data)
     if isinstance(data, DocumentSnapshot):
         return _doc_to_dict(data)
     elif isinstance(data, list) or isinstance(data, QueryResultsList):

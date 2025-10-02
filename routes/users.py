@@ -8,30 +8,7 @@ from models.user import User, UserRole
 router = APIRouter(
     prefix="/users",
     dependencies=[Depends(get_current_user)],
-    tags=["Users"],
-    responses={
-        403: {
-            "description": "Authentication Error",
-            "content": {
-                "application/json": {
-                    "example": [
-                        {"detail": "Not authenticated"},
-                        {"detail": "User not correctly registered"}
-                    ],
-                    "schema": {"type": "object", "properties": {"detail": {"type": "string"}}}
-                }
-            }
-        },
-        401: {
-            "description": "You don't have the required privileges to access this resource",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "You don't have the required privileges to access this resource"},
-                    "schema": {"type": "object", "properties": {"detail": {"type": "string"}}}
-                }
-            }
-        }
-    }
+    tags=["Users"]
 )
 
 @router.get("", response_model=List[User])
