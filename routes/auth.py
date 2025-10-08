@@ -40,4 +40,4 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 async def signup(form: RegistrationRequest):
     """Public endpoint to register a new user"""
     await register_user(form)
-    return OkResponse.detail("User registered successfully")
+    return OkResponse(detail = "User registered successfully")
