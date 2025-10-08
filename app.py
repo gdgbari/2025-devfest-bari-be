@@ -1,20 +1,22 @@
 import uvicorn
 import os
-import env
 from fastapi import FastAPI, Depends, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from env import DEBUG
+from config import get_settings
 from utils import load_routers, TrailingSlashMiddleware
 from exceptions import register_exception_handlers
+
+# Load application settings
+settings = get_settings()
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 app = FastAPI(
-    debug=DEBUG,
+    debug=settings.debug,
     redoc_url=None,
     docs_url="/api/docs",
-    version=env.VERSION,
-    title="Devfest Bari Backend",
+    version=settings.version,
+    title=settings.title,
     responses={
         403: {
             "description": "Authentication Error",
@@ -50,10 +52,10 @@ api = APIRouter(prefix="/api")
 load_routers(api)
 app.include_router(api)
 
-if DEBUG:
+if settings.debug:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -62,9 +64,9 @@ if DEBUG:
 if __name__ == '__main__':
     uvicorn.run(
         "app:app",
-        host="",
-        port=8888,
-        reload=DEBUG,
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
         access_log=True,
-        workers=env.NTHREADS
+        workers=settings.nthreads
     )

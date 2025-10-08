@@ -2,3 +2,4 @@ fastapi[all]
 uvicorn[standard]
 niquests
 firebase-admin
+pydantic-settings
