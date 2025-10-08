@@ -1,5 +1,6 @@
 from firebase_admin import auth
-from models.user import RegistrationRequest, User, UserRole
+from models.user import User, UserRole
+from models.requests import RegistrationRequest
 from repositories.users import save_user, create_user, delete_user, reserve_nickname, release_nickname
 from exceptions import EmailAlreadyExistsError, RegistrationError, NicknameAlreadyExistsError
 
