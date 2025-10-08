@@ -1,6 +1,6 @@
 import uvicorn
 import os
-from fastapi import FastAPI, Depends, APIRouter
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from config import get_settings
 from utils import load_routers, TrailingSlashMiddleware
