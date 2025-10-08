@@ -1,8 +1,5 @@
 from pydantic import BaseModel
 
-class OkResponse(BaseModel):
-    detail: str = "OK"
-
 class RegistrationRequest(BaseModel):
     name:str
     surname: str
