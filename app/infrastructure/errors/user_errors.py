@@ -22,7 +22,7 @@ class UserIdNotSpecifiedError(Exception):
 
 firestore_user_errors = {
     UserDataNotFoundError: (404, "User data not found"),
-    UserDataAlreadyExistsError: (404, "User data already exists"),
+    UserDataAlreadyExistsError: (409, "User data already exists"),
     UserIdNotSpecifiedError: (400, "User id not specified"),
 }
 

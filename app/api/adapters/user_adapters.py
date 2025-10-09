@@ -27,7 +27,6 @@ class UserAdapters:
     def domain_list_to_list_response_schema(
         users: list[User],
     ) -> UserListResponseSchema:
-        print(users[0])
         return UserListResponseSchema(
             users=[
                 UserResponseSchema(

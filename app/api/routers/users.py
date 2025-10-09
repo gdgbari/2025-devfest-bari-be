@@ -13,8 +13,8 @@ router = APIRouter(prefix="/users", tags=["Users"])
     response_model=UserResponseSchema,
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: {"description": "Bad request - invalid data"},
-        409: {"description": "User already exists"},
+        400: {"description": "Bad request - invalid data or user ID not specified"},
+        409: {"description": "User already exists - email already in use or user data already exists"},
         500: {"description": "Internal server error"},
     },
 )
@@ -29,7 +29,9 @@ def create_user(user_schema: UserCreateSchema) -> UserResponseSchema:
 @router.get(
     "",
     response_model=UserListResponseSchema,
-    responses={500: {"description": "Internal server error"}},
+    responses={
+        500: {"description": "Internal server error"}
+    },
 )
 def read_all_users() -> UserListResponseSchema:
     """Get all users from Firebase Auth and Firestore"""
@@ -41,7 +43,7 @@ def read_all_users() -> UserListResponseSchema:
     "/{uid}",
     response_model=UserResponseSchema,
     responses={
-        404: {"description": "User not found"},
+        404: {"description": "User not found - either in Firebase Auth or Firestore"},
         500: {"description": "Internal server error"},
     },
 )
@@ -55,8 +57,8 @@ def read_user(uid: str) -> UserResponseSchema:
     "/{uid}",
     response_model=UserResponseSchema,
     responses={
-        400: {"description": "Bad request - invalid data"},
-        404: {"description": "User not found"},
+        400: {"description": "Bad request - invalid data or no data to update"},
+        404: {"description": "User not found - either in Firebase Auth or Firestore"},
         500: {"description": "Internal server error"},
     },
 )
@@ -70,7 +72,7 @@ def update_user(uid: str, user_update: UserUpdateSchema) -> UserResponseSchema:
     "/{uid}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        404: {"description": "User not found"},
+        404: {"description": "User not found - either in Firebase Auth or Firestore"},
         500: {"description": "Internal server error"},
     },
 )
@@ -82,7 +84,9 @@ def delete_user(uid: str) -> None:
 @router.delete(
     "",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={500: {"description": "Internal server error"}},
+    responses={
+        500: {"description": "Internal server error"}
+    },
 )
 def delete_all_users() -> None:
     """Delete all users from Firebase Auth and Firestore (use with caution!)"""
