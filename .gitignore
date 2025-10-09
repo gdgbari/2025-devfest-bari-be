@@ -1,14 +1,6 @@
+**/__pycache__
 **/*.pyc
-.venv/
-backend/.locks/**
-**/__pycache__/
-**/__pycache__/**
-Pipfile
-Pipfile.lock
-*.lock
-!uv.lock
-firebase-keys.json
-
-#Delete all but keep folder
-secrets/**/*
-!secrets/.gitkeep
+.venv/**
+app/.env
+app/secrets/**
+!app/secrets/.gitkeep
