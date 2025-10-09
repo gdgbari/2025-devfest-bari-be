@@ -1,188 +1,426 @@
-# DevFest Bari 2025 - Backend
+# DevFest Bari 2025 - Backend API
 
-Backend API per l'evento DevFest Bari 2025, sviluppato con FastAPI e Firebase.
+User management API built with FastAPI, Firebase Auth, and Firestore, following Domain-Driven Design (DDD) principles and Clean Architecture patterns.
 
-## 🏗️ Architettura del Progetto
+## Architecture Overview
 
-Il progetto è strutturato come segue:
+This project follows **Domain-Driven Design (DDD)** with Clean Architecture principles, ensuring separation of concerns, maintainability, and testability.
+
+### Layer Structure
 
 ```
-📦 2025-devfest-bari-be
-├── 📁 controllers/          # Logica di business
-│   └── users.py            # Logica gestione utenti (esempio)
-├── 📁 models/              # Modelli Pydantic
-│   └── user.py            # Modello utente (esempio)
-├── 📁 routes/              # Router FastAPI
-│   └── users.py          # Endpoint utenti (esempio)
-├── 📁 secrets/             # Chiavi private
-│   └── firebase-keys.json # Chiave privata Firebase (da inserire)
-├── app.py                  # Applicazione principale
-├── db.py                   # Configurazione Firebase
-├── env.py                  # Configurazione ambiente
-├── utils.py                # Utilità varie
-├── requirements.txt        # Dipendenze Python
-├── Dockerfile             # Configurazione Docker
-└── compose.yml            # Docker Compose
+/app
+├── api/                          # Presentation Layer
+│   ├── routers/                  # HTTP endpoints (FastAPI routers)
+│   │   ├── health/              # Health check endpoints
+│   │   └── users/               # User management endpoints
+│   ├── schemas/                  # Request/Response models (Pydantic)
+│   │   └── users/               # User-related schemas
+│   ├── adapters/                 # Data transformation adapters
+│   │   └── users/               # User data adapters
+│   ├── dependencies.py           # FastAPI dependency injection
+│   └── include_routers.py        # Router registration
+│
+├── domain/                       # Domain Layer (Business Logic)
+│   ├── entities/                 # Domain entities
+│   │   └── user.py              # User domain entity
+│   └── services/                 # Domain services (business logic)
+│       └── user_service.py      # User business operations
+│
+├── infrastructure/               # Infrastructure Layer (External Systems)
+│   ├── clients/                  # External service clients
+│   │   ├── firebase_auth_client.py  # Firebase Auth SDK wrapper
+│   │   └── firestore_client.py      # Firestore SDK wrapper
+│   ├── repositories/             # Data access repositories
+│   │   ├── auth_repository.py   # Firebase Auth operations
+│   │   └── user_repository.py   # Firestore user operations
+│   └── errors/                   # Infrastructure error handling
+│       ├── auth_errors.py       # Authentication errors
+│       ├── firestore_errors.py  # Firestore errors
+│       └── user_errors.py       # User-related errors
+│
+├── core/                         # Core Layer (Shared Kernel)
+│   ├── settings.py              # Application settings
+│   ├── logging.py               # Logging configuration
+│   ├── middleware.py            # FastAPI middleware
+│   └── security.py              # Security utilities
+│
+├── secrets/                      # Sensitive configuration files
+│   └── service_account_key.json # Firebase service account key
+│
+├── main.py                       # Application entry point
+├── requirements.txt              # Python dependencies
+└── env-template                  # Environment variables template
 ```
 
-## � Sistema di Router Automatico
+## Clean Architecture Principles
 
-Il progetto utilizza un sistema di **caricamento dinamico dei router** che scansiona automaticamente la cartella `routes/`.
+### 1. **Dependency Rule**
+Dependencies flow inward: `API → Domain ← Infrastructure`
 
-### 📋 Requisiti per i File Router
+- **Domain Layer** has no dependencies (pure business logic)
+- **Infrastructure Layer** depends on Domain
+- **API Layer** depends on Domain and uses Infrastructure through dependency injection
 
-Ogni file nella cartella `routes/` deve rispettare queste regole:
+### 2. **Separation of Concerns**
 
-1. **Deve contenere un oggetto `APIRouter`** chiamato esattamente `router` nel contesto globale
-2. **Il router verrà automaticamente rilevato e incluso** nell'applicazione all'avvio
+- **Routers**: Handle HTTP requests/responses
+- **Schemas**: Validate and serialize API data (DTOs)
+- **Adapters**: Transform between schemas and domain entities
+- **Entities**: Pure domain models with business logic
+- **Services**: Orchestrate domain operations
+- **Repositories**: Abstract data persistence
+- **Clients**: Wrap external service SDKs
 
-### 💡 Esempio di File Router
+### 3. **Dependency Injection**
+
+All dependencies are injected via FastAPI's dependency injection system using `@lru_cache()` for singletons:
 
 ```python
-# routes/example.py
-from fastapi import APIRouter
+# Clients (Singleton)
+@lru_cache()
+def get_auth_client() -> FirebaseAuthClient
 
-# ✅ OBBLIGATORIO: Il router deve chiamarsi esattamente 'router'
-router = APIRouter(prefix="/example", tags=["Example"])
+# Repositories
+def get_auth_repository(auth_client: FirebaseAuthClient) -> AuthRepository
 
-@router.get("/")
-async def get_example():
-    return {"message": "Hello from example router!"}
-
-@router.post("/create")
-async def create_example():
-    return {"message": "Example created!"}
+# Services
+def get_user_service(repositories...) -> UserService
 ```
 
-### ⚠️ Cosa NON fare
+## Technology Stack
+
+- **FastAPI**: Modern Python web framework
+- **Firebase Authentication**: User authentication and identity management
+- **Firestore**: NoSQL document database
+- **Pydantic**: Data validation and settings management
+- **Uvicorn**: ASGI server
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.9+
+- Firebase project with Authentication and Firestore enabled
+- Firebase service account key
+
+### Installation
+
+1. **Clone the repository**
+
+```bash
+git clone <repository-url>
+cd 2025-devfest-bari-be
+```
+
+2. **Install dependencies**
+
+```bash
+pip install -r app/requirements.txt
+```
+
+3. **Configure Firebase**
+
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Enable **Authentication** (Email/Password provider)
+   - Enable **Firestore Database**
+   - Generate a service account key:
+     - Go to Project Settings → Service Accounts
+     - Click "Generate New Private Key"
+     - Save as `/app/secrets/service_account_key.json`
+
+4. **Set environment variables** (optional)
+
+Create a `.env` file in the project root:
+
+```env
+FIREBASE_SERVICE_ACCOUNT_PATH=/app/secrets/service_account_key.json
+API_ROOT_PATH=/api
+VERSION=1.0.0
+DEBUG=False
+```
+
+### Running the Application
+
+**Development mode:**
+
+```bash
+cd app
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Production mode:**
+
+```bash
+cd app
+python main.py
+```
+
+The API will be available at: `http://localhost:8000/api`
+
+### Docker Support
+
+```bash
+docker-compose up --build
+```
+
+## API Documentation
+
+### Interactive Documentation
+
+- **Swagger UI**: `http://localhost:8000/api/docs`
+- **ReDoc**: `http://localhost:8000/api/redoc`
+
+### Endpoints
+
+Base URL: `http://localhost:8000/api`
+
+#### 1. Health Check
+
+**GET** `/health`
+
+Check API health status.
+
+**Response:**
+```json
+{
+  "status": "healthy"
+}
+```
+
+#### 2. Create User
+
+**POST** `/users`
+
+Creates a new user in Firebase Auth and Firestore.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "name": "John",
+  "surname": "Doe",
+  "nickname": "johndoe"
+}
+```
+
+**Response:** `201 Created`
+```json
+{
+  "uid": "firebase-generated-uid",
+  "email": "user@example.com",
+  "name": "John",
+  "surname": "Doe",
+  "nickname": "johndoe"
+}
+```
+
+#### 3. Get All Users
+
+**GET** `/users`
+
+Retrieves all users from Firestore.
+
+**Response:** `200 OK`
+```json
+{
+  "users": [
+    {
+      "uid": "firebase-uid-1",
+      "email": "user1@example.com",
+      "name": "John",
+      "surname": "Doe",
+      "nickname": "johndoe"
+    }
+  ],
+  "total": 1
+}
+```
+
+#### 4. Get User by UID
+
+**GET** `/users/{uid}`
+
+Retrieves a specific user by their UID.
+
+**Response:** `200 OK`
+```json
+{
+  "uid": "firebase-uid",
+  "email": "user@example.com",
+  "name": "John",
+  "surname": "Doe",
+  "nickname": "johndoe"
+}
+```
+
+#### 5. Update User
+
+**PUT** `/users/{uid}`
+
+Updates user information in Firebase Auth and/or Firestore.
+
+**Request Body:**
+```json
+{
+  "email": "newemail@example.com",
+  "name": "Jane",
+  "surname": "Smith",
+  "nickname": "janesmith"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "uid": "firebase-uid",
+  "email": "newemail@example.com",
+  "name": "Jane",
+  "surname": "Smith",
+  "nickname": "janesmith"
+}
+```
+
+#### 6. Delete User
+
+**DELETE** `/users/{uid}`
+
+Deletes a user from both Firebase Auth and Firestore.
+
+**Response:** `204 No Content`
+
+#### 7. Delete All Users
+
+**DELETE** `/users`
+
+⚠️ **Warning**: Deletes all users from Firebase Auth and Firestore. Use with caution!
+
+**Response:** `204 No Content`
+
+## Data Flow
+
+### Example: Create User Flow
+
+```
+1. HTTP Request
+   ↓
+2. Router (create_user.py)
+   ↓
+3. Schema Validation (CreateUserRequest)
+   ↓
+4. Adapter (transform to domain entity)
+   ↓
+5. UserService (business logic orchestration)
+   ↓
+6. AuthRepository (create in Firebase Auth)
+   ↓
+7. UserRepository (create in Firestore)
+   ↓
+8. Adapter (transform to response schema)
+   ↓
+9. HTTP Response (CreateUserResponse)
+```
+
+## Error Handling
+
+The API uses standard HTTP status codes:
+
+- `200 OK`: Successful GET/PUT request
+- `201 Created`: Successful POST request
+- `204 No Content`: Successful DELETE request
+- `400 Bad Request`: Invalid request data
+- `404 Not Found`: Resource not found
+- `409 Conflict`: Resource already exists
+- `500 Internal Server Error`: Server error
+
+Custom error classes:
+- `AuthenticationError`: Firebase Auth errors
+- `UserNotFoundError`: User doesn't exist
+- `UserAlreadyExistsError`: User already exists
+- `DocumentNotFoundError`: Firestore document not found
+
+## Testing
+
+The architecture supports easy testing through dependency injection:
 
 ```python
-# ❌ SBAGLIATO: Nome diverso da 'router'
-my_router = APIRouter()  # Non verrà rilevato!
-
-# ❌ SBAGLIATO: Router in una classe o funzione
-class MyRoutes:
-    router = APIRouter()  # Non è nel contesto globale!
-
-def create_router():
-    router = APIRouter()  # Non è nel contesto globale!
-    return router
+# Example: Mock repository in tests
+app.dependency_overrides[get_user_repository] = lambda: MockUserRepository()
 ```
 
-### 🔧 Come Funziona
+## Security Considerations
 
-1. All'avvio, `utils.load_routers()` scansiona tutti i file `.py` in `routes/`
-2. Per ogni file, cerca un oggetto chiamato `router` di tipo `APIRouter`
-3. Se trovato, lo include automaticamente nell'applicazione FastAPI
-4. Tutti i router vengono aggiunti al prefix `/api` con autenticazione obbligatoria
+- ✅ Passwords are hashed and managed by Firebase Auth
+- ✅ Service account key must be kept secure
+- ✅ Firestore security rules should be configured
+- ✅ Use HTTPS in production
+- ✅ Environment variables for sensitive configuration
+- ✅ Input validation via Pydantic schemas
 
-## �🔧 Configurazione
+## Project Configuration
 
-### 1. Chiave Privata Firebase
+### Settings (core/settings.py)
 
-Per far funzionare l'applicazione, devi inserire la chiave privata di Firebase:
+- `FIREBASE_SERVICE_ACCOUNT_PATH`: Path to Firebase service account key
+- `API_ROOT_PATH`: API base path (default: `/api`)
+- `VERSION`: API version
+- `DEBUG`: Debug mode flag
 
-1. **Ottieni la chiave privata:**
-   - Vai nella [Firebase Console](https://console.firebase.google.com/)
-   - Seleziona il tuo progetto
-   - Vai su "Impostazioni progetto" > "Account di servizio"
-   - Clicca su "Genera nuova chiave privata"
-   - Scarica il file JSON
+## Firebase Setup
 
-2. **Posiziona la chiave:**
-   ```bash
-   # Copia il file scaricato nella cartella secrets
-   cp /path/to/downloaded/file.json ./secrets/firebase-keys.json
-   ```
+### Authentication Rules
 
-   **⚠️ IMPORTANTE**: Il file `firebase-keys.json` deve essere posizionato esattamente in `./secrets/firebase-keys.json`
+Enable Email/Password authentication in Firebase Console.
 
-### 2. Variabili d'Ambiente
+### Firestore Structure
 
-Puoi configurare l'applicazione tramite variabili d'ambiente:
+**Collection: `users`**
 
-```bash
-export DEBUG=true          # Abilita modalità debug
-export NTHREADS=4         # Numero di thread (default: CPU count)
+```
+users/
+  └── {uid}/
+      ├── email: string
+      ├── name: string
+      ├── surname: string
+      └── nickname: string
 ```
 
-Oppure direttamente inline:
+### Firestore Security Rules (Example)
 
-```bash
-DEBUG=true NTHREADS=4 python3 app.py
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
 ```
 
-## 🚀 Avvio con Docker
+## Development Guidelines
 
+### Adding a New Entity
 
-### Avvio Rapido
+1. Create domain entity in `domain/entities/`
+2. Create repository interface in `domain/repositories/` (if using interfaces)
+3. Implement repository in `infrastructure/repositories/`
+4. Create service in `domain/services/`
+5. Add schemas in `api/schemas/`
+6. Create adapters in `api/adapters/`
+7. Implement router in `api/routers/`
+8. Register dependencies in `api/dependencies.py`
+9. Include router in `api/include_routers.py`
 
-1. **Clona il repository:**
-   ```bash
-   git clone https://github.com/gdgbari/2025-devfest-bari-be.git
-   cd 2025-devfest-bari-be
-   ```
+## Contributing
 
-2. **Configura Firebase:**
-   ```bash
-   # Posiziona la tua chiave Firebase
-   cp /path/to/your/firebase-key.json ./secrets/firebase-keys.json
-   ```
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-3. **Avvia con Docker Compose:**
-   ```bash
-   docker-compose up --build
-   ```
+## Contact
 
-4. **L'applicazione sarà disponibile su:**
-   - API: http://localhost:8888
-   - Documentazione: http://localhost:8888/api/docs
-
-## 🛠️ Sviluppo Locale
-
-### Prerequisiti
-- Python 3.13+
-- uv (package manager) o pip
-
-### Setup Ambiente Locale
-
-1. **Installa le dipendenze:**
-   ```bash
-   # Con uv (consigliato)
-   uv pip install -r requirements.txt
-
-   # Con pip
-   pip install -r requirements.txt
-   ```
-
-2. **Configura Firebase:**
-   ```bash
-   cp /path/to/your/firebase-key.json ./secrets/firebase-keys.json
-   ```
-
-3. **Avvia l'applicazione:**
-   ```bash
-   # Modalità sviluppo con auto-reload
-   DEBUG=true python app.py
-
-   # Modalità produzione
-   python app.py
-   ```
-
-### Documentazione
-- `GET /api/docs` - Swagger UI
-- `GET /openapi.json` - Schema OpenAPI
-
-## 🔒 Sicurezza
-
-- Gli endpoint sotto `/api` richiedono autenticazione
-- Le chiavi Firebase sono gestite tramite file separati
-- CORS abilitato solo in modalità DEBUG
-
-## 🏗️ Tecnologie Utilizzate
-
-- **FastAPI** - Framework web asincrono
-- **Firebase Admin SDK** - Database e autenticazione  
-- **Uvicorn** - Server ASGI
-- **Pydantic** - Validazione dati
-- **Docker** - Containerizzazione
+GDG Bari - DevFest 2025

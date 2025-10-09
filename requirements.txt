@@ -1,5 +1,7 @@
-fastapi[all]
+fastapi[standard]
 uvicorn[standard]
-niquests
-firebase-admin
+pydantic
+pydantic[email]
 pydantic-settings
+firebase-admin
+google-cloud-firestore
