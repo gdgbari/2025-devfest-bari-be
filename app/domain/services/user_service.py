@@ -2,7 +2,6 @@ from domain.entities.user import User
 from infrastructure.repositories.auth_repository import AuthRepository
 from infrastructure.repositories.user_repository import UserRepository
 
-
 class UserService:
     @staticmethod
     def create_user(user: User) -> User:

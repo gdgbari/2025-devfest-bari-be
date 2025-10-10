@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from api.schemas.user_schemas import UserResponseSchema
+from api.schemas.user_schemas import CreateUserResponse
 
 
 @dataclass
@@ -50,8 +50,8 @@ class User:
         data = schema.model_dump()
         return User.from_dict(data)
 
-    def to_schema(self) -> UserResponseSchema:
-        return UserResponseSchema(
+    def to_schema(self) -> CreateUserResponse:
+        return CreateUserResponse(
             uid=self.uid,
             email=self.email,
             name=self.name,
