@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -10,35 +10,22 @@ from infrastructure.errors.user_errors import *
 
 class FirestoreClient:
     """
-    A singleton client for interacting with Google Firestore using the firebase_admin SDK.
+    Client for interacting with Google Firestore using the firebase_admin SDK.
 
     This class provides common methods for creating, reading, updating, and deleting documents
     in Firestore collections, as well as user-specific document operations.
+
+    Note: Use as a singleton through FastAPI's dependency injection with lru_cache.
 
     Usage:
         client = FirestoreClient()
         client.create_doc("collection", "doc_id", {"field": "value"})
     """
 
-    _instance: Optional["FirestoreClient"] = None
-
-    def __new__(
-        cls: Type["FirestoreClient"], *args: Any, **kwargs: Any
-    ) -> "FirestoreClient":
-        """
-        Ensures only one instance of FirestoreClient exists (singleton pattern).
-        """
-        if cls._instance is None:
-            cls._instance = super(FirestoreClient, cls).__new__(cls)
-            cls._instance._initialized: bool = False
-        return cls._instance
-
     def __init__(self) -> None:
         """
         Initializes the Firestore client and Firebase app if not already initialized.
         """
-        if getattr(self, "_initialized", False):
-            return
         if not firebase_admin._apps:
             cred: credentials.Certificate = credentials.Certificate(
                 settings.firebase_service_account_path

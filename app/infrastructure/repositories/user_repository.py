@@ -4,37 +4,41 @@ from infrastructure.errors.user_errors import *
 
 
 class UserRepository:
-    __firestore_client: FirestoreClient = FirestoreClient()
+    """
+    Repository with db interaction related to user data operations in Firestore
+    """
 
-    @classmethod
-    def create_user(cls, user_data: User) -> None:
+    def __init__(
+        self,
+        firestore_client: FirestoreClient,
+    ):
+        self.firestore_client = firestore_client
+
+    def create_user(self, user_data: User) -> None:
         try:
             if not user_data.uid:
                 raise UserIdNotSpecifiedError()
 
-            cls.__firestore_client.create_user_doc(
+            self.firestore_client.create_user_doc(
                 doc_id=user_data.uid, user_data=user_data.to_firestore_data()
             )
         except Exception as e:
             handle_firestore_user_error(e)
 
-    @classmethod
-    def read_user(cls, uid: str) -> dict:
+    def read_user(self, uid: str) -> dict:
         try:
-            user_data_dict = cls.__firestore_client.read_user_doc(uid)
+            user_data_dict = self.firestore_client.read_user_doc(uid)
             return {"uid": uid, **user_data_dict}
         except Exception as e:
             handle_firestore_user_error(e)
 
-    @classmethod
-    def read_all_users(cls) -> list[dict]:
+    def read_all_users(self) -> list[dict]:
         try:
-            return cls.__firestore_client.read_all_user_docs()
+            return self.firestore_client.read_all_user_docs()
         except Exception as e:
             handle_firestore_user_error(e)
 
-    @classmethod
-    def update_user(cls, uid: str, user_data: dict) -> None:
+    def update_user(self, uid: str, user_data: dict) -> None:
         try:
             update_params = {}
             if user_data["name"]:
@@ -42,22 +46,20 @@ class UserRepository:
             if user_data["surname"]:
                 update_params["surname"] = user_data["surname"]
 
-            cls.__firestore_client.update_user_doc(
+            self.firestore_client.update_user_doc(
                 doc_id=uid, user_data=update_params
             )
         except Exception as e:
             handle_firestore_user_error(e)
 
-    @classmethod
-    def delete_user(cls, uid: str) -> None:
+    def delete_user(self, uid: str) -> None:
         try:
-            cls.__firestore_client.delete_user_doc(doc_id=uid)
+            self.firestore_client.delete_user_doc(doc_id=uid)
         except Exception as e:
             handle_firestore_user_error(e)
 
-    @classmethod
-    def delete_all_users(cls) -> None:
+    def delete_all_users(self) -> None:
         try:
-            cls.__firestore_client.delete_all_user_docs()
+            self.firestore_client.delete_all_user_docs()
         except Exception as e:
             handle_firestore_user_error(e)

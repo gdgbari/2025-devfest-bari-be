@@ -8,29 +8,18 @@ from typing import Optional, Any, Dict, List
 
 class FirebaseAuthClient:
     """
-    Singleton client for interacting with Firebase Authentication using the firebase_admin SDK.
+    Client for interacting with Firebase Authentication using the firebase_admin SDK.
 
     This class provides methods to create, read, update, and delete users in Firebase Authentication.
     It ensures that the Firebase app is initialized before performing any operations.
+
+    Note: Use as a singleton through FastAPI's dependency injection with lru_cache.
     """
-
-    _instance: Optional["FirebaseAuthClient"] = None
-
-    def __new__(cls, *args: Any, **kwargs: Any) -> "FirebaseAuthClient":
-        """
-        Ensure only one instance of FirebaseAuthClient exists (singleton pattern).
-        """
-        if cls._instance is None:
-            cls._instance = super(FirebaseAuthClient, cls).__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
 
     def __init__(self) -> None:
         """
         Initialize the Firebase client and Firebase app if not already initialized.
         """
-        if getattr(self, "_initialized", False):
-            return
         if not firebase_admin._apps:
             cred: credentials.Certificate = credentials.Certificate(
                 settings.firebase_service_account_path
