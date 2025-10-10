@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status
+from typing import Annotated
+from fastapi import APIRouter, status, Depends
 
 from api.adapters.users.update_user_adapter import UpdateUserAdapters
 from api.schemas.users.update_user_schema import UpdateUserRequest, UpdateUserResponse
 from domain.entities.user import User
 from domain.services.user_service import UserService
+from api.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -17,7 +19,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
         500: {"description": "Internal server error"},
     },
 )
-def update_user(uid: str, user_update: UpdateUserRequest) -> UpdateUserResponse:
+def update_user(
+    uid: str, 
+    user_update: UpdateUserRequest,
+    user_service: Annotated[UserService, Depends(get_user_service)]
+) -> UpdateUserResponse:
+    
     """Update user information in Firebase Auth and Firestore"""
-    updated_user: User = UserService.update_user(uid, user_update.model_dump())
+    updated_user: User = user_service.update_user(uid, user_update.model_dump())
     return UpdateUserAdapters.to_update_response(updated_user)

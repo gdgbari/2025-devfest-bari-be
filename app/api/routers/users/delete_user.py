@@ -1,6 +1,8 @@
-from fastapi import APIRouter, status
+from typing import Annotated
+from fastapi import APIRouter, status, Depends
 
 from domain.services.user_service import UserService
+from api.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -12,9 +14,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
         500: {"description": "Internal server error"},
     },
 )
-def delete_user(uid: str) -> None:
+def delete_user(
+    uid: str,
+    user_service: Annotated[UserService, Depends(get_user_service)]
+) -> None:
     """Delete user from Firebase Auth and Firestore"""
-    UserService.delete_user(uid)
+    user_service.delete_user(uid)
 
 
 @router.delete(
@@ -24,6 +29,8 @@ def delete_user(uid: str) -> None:
         500: {"description": "Internal server error"}
     },
 )
-def delete_all_users() -> None:
+def delete_all_users(
+    user_service: Annotated[UserService, Depends(get_user_service)]
+) -> None:
     """Delete all users from Firebase Auth and Firestore (use with caution!)"""
-    UserService.delete_all_users()
+    user_service.delete_all_users()

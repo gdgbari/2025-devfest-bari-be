@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status
+from typing import Annotated
+from fastapi import APIRouter, status, Depends
 
 from api.adapters.users.read_user_adapter import ReadUserAdapters
 from api.schemas.users.read_user_schema import GetUserResponse, GetUserListResponse
 from domain.entities.user import User
 from domain.services.user_service import UserService
+from api.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -15,9 +17,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
         500: {"description": "Internal server error"}
     },
 )
-def read_all_users() -> GetUserListResponse:
+def read_all_users(
+    user_service: Annotated[UserService, Depends(get_user_service)]
+) -> GetUserListResponse:
+    
     """Get all users from Firebase Auth and Firestore"""
-    users: list[User] = UserService.read_all_users()
+    users: list[User] = user_service.read_all_users()
     return ReadUserAdapters.to_get_users_response(users)
 
 
@@ -30,7 +35,11 @@ def read_all_users() -> GetUserListResponse:
         500: {"description": "Internal server error"},
     },
 )
-def read_user(uid: str) -> GetUserResponse:
+def read_user(
+    uid: str,
+    user_service: Annotated[UserService, Depends(get_user_service)]
+) -> GetUserResponse:
+    
     """Get user by UID from Firebase Auth and Firestore"""
-    user: User = UserService.read_user(uid)
+    user: User = user_service.read_user(uid)
     return ReadUserAdapters.to_get_user_response(user)

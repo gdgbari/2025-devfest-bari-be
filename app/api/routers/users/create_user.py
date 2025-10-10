@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status
+from typing import Annotated
+from fastapi import APIRouter, status, Depends
 
 from api.adapters.users.create_user_adapter import CreateUserAdapter
 from api.schemas.users.create_user_schema import CreateUserRequest, CreateUserResponse
 from domain.entities.user import User
 from domain.services.user_service import UserService
+from api.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -17,9 +19,13 @@ router = APIRouter(prefix="/users", tags=["Users"])
         500: {"description": "Internal server error"},
     },
 )
-def create_user(request: CreateUserRequest) -> CreateUserResponse:
+def create_user(
+    request: CreateUserRequest,
+    user_service: Annotated[UserService, Depends(get_user_service)]
+) -> CreateUserResponse:
+    
     """Create a new user in Firebase Auth and Firestore"""
-    new_user: User = UserService.create_user(
+    new_user: User = user_service.create_user(
         CreateUserAdapter.to_create_user_domain(request)
     )
     return CreateUserAdapter.to_create_user_response(new_user)

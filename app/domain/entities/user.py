@@ -3,9 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from api.schemas.user_schemas import CreateUserResponse
-
-
 @dataclass
 class User:
     def __init__(
@@ -49,15 +46,6 @@ class User:
     def from_schema(schema: BaseModel) -> "User":
         data = schema.model_dump()
         return User.from_dict(data)
-
-    def to_schema(self) -> CreateUserResponse:
-        return CreateUserResponse(
-            uid=self.uid,
-            email=self.email,
-            name=self.name,
-            surname=self.surname,
-            nickname=self.nickname,
-        )
 
     def to_firestore_data(self) -> dict:
         return {
