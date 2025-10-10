@@ -1,65 +1,76 @@
+from infrastructure.repositories.auth_repository import AuthRepository
+from infrastructure.repositories.firestore_repository import FirestoreRepository
 from domain.entities.user import User
-from infrastructure.clients.firestore_client import FirestoreClient
-from infrastructure.errors.user_errors import *
-
 
 class UserRepository:
     """
-    Repository with db interaction related to user data operations in Firestore
+    Repository for managing all user operations
     """
 
     def __init__(
         self,
-        firestore_client: FirestoreClient,
+        auth_repository: AuthRepository,
+        firestore_repository: FirestoreRepository
     ):
-        self.firestore_client = firestore_client
+        self.auth_repository = auth_repository
+        self.firestore_repository = firestore_repository
 
-    def create_user(self, user_data: User) -> None:
-        try:
-            if not user_data.uid:
-                raise UserIdNotSpecifiedError()
+    def create(self, user: User) -> User:
+        uid = self.auth_repository.create(user)
+        # Set UID for Firestore
+        user.uid = uid
+        # Create user data in Firestore
+        self.firestore_repository.create(user)
+        # Return new user
+        return user
+    
+    def delete(self, uid: str) -> None:
+        """
+        Deletes a user from Firebase Auth, then from Firestore.
+        Returns None.
+        """
+        if uid is not None:
+            self.auth_repository.delete(uid)
+            self.firestore_repository.delete(uid)
 
-            self.firestore_client.create_user_doc(
-                doc_id=user_data.uid, user_data=user_data.to_firestore_data()
-            )
-        except Exception as e:
-            handle_firestore_user_error(e)
+    def delete_all(self) -> None:
+        """
+        Deletes all users from Firebase Auth, then from Firestore.
+        Returns None.
+        """
+        self.auth_repository.delete_all()
+        self.firestore_repository.delete_all()
 
-    def read_user(self, uid: str) -> dict:
-        try:
-            user_data_dict = self.firestore_client.read_user_doc(uid)
-            return {"uid": uid, **user_data_dict}
-        except Exception as e:
-            handle_firestore_user_error(e)
+    def read(self, uid: str) -> User:
+        """
+        Reads a user from Firestore and returns it as a response schema.
+        """
+        return User.from_dict(self.firestore_repository.read(uid))
+    
+    def read_all(self) -> list[User]:
+        """
+        Reads all users from Firestore and returns them as a list of response schemas.
+        """
+        users: list[dict] = self.firestore_repository.read_all()
+        return [User.from_dict(user) for user in users]
+    
+    def update(self, user_update: dict, current_user: User) -> User:
+        """
+        Update a current user with the update information and then
+        return the user updated
+        """
+        if user_update["email"]:
+            # Update in Firebase Auth
+            self.auth_repository.update(current_user.uid, user_update)
 
-    def read_all_users(self) -> list[dict]:
-        try:
-            return self.firestore_client.read_all_user_docs()
-        except Exception as e:
-            handle_firestore_user_error(e)
+        # Update in Firestore
+        self.firestore_repository.update(current_user.uid, user_update)
 
-    def update_user(self, uid: str, user_data: dict) -> None:
-        try:
-            update_params = {}
-            if user_data["name"]:
-                update_params["name"] = user_data["name"]
-            if user_data["surname"]:
-                update_params["surname"] = user_data["surname"]
+        return User(
+            uid=current_user.uid,
+            email=user_update["email"] if user_update["email"] is not None else current_user.email,
+            name=user_update["name"] if user_update["name"] is not None else current_user.name,
+            surname=user_update["surname"] if user_update["surname"] is not None else current_user.surname,
+            nickname=current_user.nickname,
+        )
 
-            self.firestore_client.update_user_doc(
-                doc_id=uid, user_data=update_params
-            )
-        except Exception as e:
-            handle_firestore_user_error(e)
-
-    def delete_user(self, uid: str) -> None:
-        try:
-            self.firestore_client.delete_user_doc(doc_id=uid)
-        except Exception as e:
-            handle_firestore_user_error(e)
-
-    def delete_all_users(self) -> None:
-        try:
-            self.firestore_client.delete_all_user_docs()
-        except Exception as e:
-            handle_firestore_user_error(e)

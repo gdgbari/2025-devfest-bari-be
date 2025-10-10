@@ -9,7 +9,6 @@ class UpdateUserRequest(BaseModel):
     email: Optional[str] = None
     name: Optional[str] = None
     surname: Optional[str] = None
-    nickname: Optional[str] = None
 
 class UpdateUserResponse(UserBaseSchema):
     uid: str

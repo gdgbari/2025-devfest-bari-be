@@ -1,5 +1,4 @@
 from domain.entities.user import User
-from infrastructure.repositories.auth_repository import AuthRepository
 from infrastructure.repositories.user_repository import UserRepository
 
 class UserService:
@@ -9,78 +8,47 @@ class UserService:
 
     def __init__(
         self, 
-        auth_repository: AuthRepository,
         user_repository: UserRepository
     ):
-        self.auth_repository = auth_repository
         self.user_repository = user_repository
 
     def create_user(self, user: User) -> User:
         """
-        Creates a user in Firebase Auth, then in Firestore.
-        Returns the created user as a response schema.
+        Creates a user in database.
         """
         try:
-            # Create user in Firebase Auth
-            uid = self.auth_repository.create_user(user)
-            # Set UID for Firestore
-            user.uid = uid
-            # Create user data in Firestore
-            self.user_repository.create_user(user)
-            # Return new user
-            return user
+            self.user_repository.create(user)
         except:
             # Rollback
             self.delete_user(user.uid)
 
     def read_user(self, uid: str) -> User:
         """
-        Reads a user from Firestore and returns it as a response schema.
+        Reads a user from database.
         """
-        return User.from_dict(self.user_repository.read_user(uid))
+        return self.user_repository.read(uid)
 
     def read_all_users(self) -> list[User]:
         """
-        Reads all users from Firestore and returns them as a list of response schemas.
+        Reads all users in database.
         """
-        users: list[dict] = self.user_repository.read_all_users()
-        return [User.from_dict(user) for user in users]
+        return self.user_repository.read_all()
 
     def update_user(self, uid: str, user_update: dict) -> User:
         """
-        Updates a user in Firebase Auth, then in Firestore.
-        Returns the updated user as a response schema.
+        Recover a user from uid in database and the updates it.
         """
         current_user: User = self.read_user(uid)
-        
-        if user_update["email"]:
-            # Update in Firebase Auth
-            self.auth_repository.update_user(uid, user_update)
-
-        # Update in Firestore
-        self.user_repository.update_user(uid, user_update)
-
-        return User(
-            uid=current_user.uid,
-            email=current_user.email,
-            name=user_update["name"] if user_update["name"] is not None else current_user.name,
-            surname=user_update["surname"] if user_update["surname"] is not None else current_user.surname,
-            nickname=current_user.nickname,
-        )
+        return self.user_repository.update(user_update=user_update, current_user=current_user)
     
     def delete_user(self, uid: str) -> None:
         """
-        Deletes a user from Firebase Auth, then from Firestore.
-        Returns None.
+        Deletes a user from the database.
         """
-        if uid is not None:
-            self.auth_repository.delete_user(uid)
-            self.user_repository.delete_user(uid)
+        self.user_repository.delete(uid)
 
     def delete_all_users(self) -> None:
         """
-        Deletes all users from Firebase Auth, then from Firestore.
-        Returns None.
+        Deletes all users from database.
         """
-        self.auth_repository.delete_all_users()
-        self.user_repository.delete_all_users()
+        self.user_repository.delete_all()

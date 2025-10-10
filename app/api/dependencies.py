@@ -4,8 +4,9 @@ from fastapi import Depends
 
 from infrastructure.repositories.auth_repository import AuthRepository
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
-from infrastructure.clients.firestore_client import FirestoreClient
 from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.clients.firestore_client import FirestoreClient
+from infrastructure.repositories.firestore_repository import FirestoreRepository
 from domain.services.user_service import UserService
 
 @lru_cache()
@@ -30,15 +31,21 @@ def get_auth_repository(
     """Dependency to get AuthRepository instance"""
     return AuthRepository(auth_client)
 
-def get_user_repository(
+def get_firestore_repository(
     firestore_client: Annotated[FirestoreClient, Depends(get_firestore_client)]
+) -> FirestoreRepository:
+    """Dependency to get UserRepository instance"""
+    return FirestoreRepository(firestore_client)
+
+def get_user_repository(
+    auth_repository: Annotated[AuthRepository, Depends(get_auth_repository)],
+    firestore_repository: Annotated[FirestoreRepository, Depends(get_firestore_repository)]
 ) -> UserRepository:
     """Dependency to get UserRepository instance"""
-    return UserRepository(firestore_client)
+    return UserRepository(auth_repository, firestore_repository)
 
 def get_user_service(
-    auth_repository: Annotated[AuthRepository, Depends(get_auth_repository)],
     user_repository: Annotated[UserRepository, Depends(get_user_repository)]
 ) -> UserService:
     """Dependency to get UserService with injected repositories"""
-    return UserService(auth_repository, user_repository)
+    return UserService(user_repository)
