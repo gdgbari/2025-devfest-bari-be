@@ -1,6 +1,6 @@
-from base_schema import UserBaseSchema
+from api.schemas.users.base_schema import UserBaseSchema
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 class GetUserResponse(UserBaseSchema):
     uid: str

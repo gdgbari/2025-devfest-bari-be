@@ -1,6 +1,6 @@
 from typing import Optional
 
-from base_schema import UserBaseSchema
+from api.schemas.users.base_schema import UserBaseSchema
 from pydantic import BaseModel
 
 class UpdateUserRequest(BaseModel):
