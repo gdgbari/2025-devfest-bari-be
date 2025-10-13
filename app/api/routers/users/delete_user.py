@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, status, Depends
 
 from domain.services.user_service import UserService
-from api.dependencies import get_user_service
+from core.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

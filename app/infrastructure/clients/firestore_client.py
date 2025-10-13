@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore import SERVER_TIMESTAMP
 
 from core.settings import settings
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
@@ -170,6 +171,19 @@ class FirestoreClient:
             self.create_doc("users", doc_id, user_data)
         except Exception:
             raise UserDataAlreadyExistsError()
+        
+    def create_nickname_doc(self, nickname: str) -> None:
+        """"
+        Creates a nickname document in the 'nicknames' collection.
+        """
+        try:
+            dict_nickname = {
+                "nickname":nickname,
+                "reserved_at":SERVER_TIMESTAMP
+            }
+            self.create_doc("nicknames", doc_id=nickname, doc_data=dict_nickname)
+        except Exception:
+            raise UserDataAlreadyExistsError()
 
     def read_user_doc(self, doc_id: str) -> Dict[str, Any]:
         """
@@ -221,6 +235,18 @@ class FirestoreClient:
         """
         try:
             self.delete_doc("users", doc_id)
+        except Exception:
+            raise UserDataNotFoundError()
+        
+    def delete_nickname_doc(self, nickname: str) -> None:
+        """
+        Deletes a nickname document from the 'nickname' collection.
+
+        Args:
+            nickname (str): The nickname.
+        """
+        try:
+            self.delete_doc("nicknames", nickname)
         except Exception:
             raise UserDataNotFoundError()
 

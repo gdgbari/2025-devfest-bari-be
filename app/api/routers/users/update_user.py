@@ -5,7 +5,7 @@ from api.adapters.users.update_user_adapter import UpdateUserAdapters
 from api.schemas.users.update_user_schema import UpdateUserRequest, UpdateUserResponse
 from domain.entities.user import User
 from domain.services.user_service import UserService
-from api.dependencies import get_user_service
+from core.dependencies import get_user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

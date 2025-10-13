@@ -24,6 +24,14 @@ class FirestoreRepository:
             )
         except Exception as e:
             handle_firestore_user_error(e)
+    
+    def reserve_nickname(self, nickname: str) -> None:
+        try:
+            self.firestore_client.create_nickname_doc(
+                nickname=nickname
+            )
+        except Exception as e:
+            handle_firestore_user_error(e)
 
     def read(self, uid: str) -> dict:
         try:

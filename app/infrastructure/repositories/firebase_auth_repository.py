@@ -2,7 +2,7 @@ from domain.entities.user import User
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
 from infrastructure.errors.auth_errors import *
 
-class AuthRepository:
+class FirebaseAuthRepository:
     """
     Repository with db interaction realted with authentication operations
     """

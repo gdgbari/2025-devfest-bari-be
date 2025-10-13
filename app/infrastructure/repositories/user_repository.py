@@ -1,4 +1,4 @@
-from infrastructure.repositories.auth_repository import AuthRepository
+from infrastructure.repositories.firebase_auth_repository import FirebaseAuthRepository
 from infrastructure.repositories.firestore_repository import FirestoreRepository
 from domain.entities.user import User
 
@@ -9,13 +9,16 @@ class UserRepository:
 
     def __init__(
         self,
-        auth_repository: AuthRepository,
+        auth_repository: FirebaseAuthRepository,
         firestore_repository: FirestoreRepository
     ):
         self.auth_repository = auth_repository
         self.firestore_repository = firestore_repository
 
     def create(self, user: User) -> User:
+        # Reserve a nickname in the nicknames collection to check univocity
+        self.firestore_repository.reserve_nickname(user.nickname)
+        # Create user in authentication
         uid = self.auth_repository.create(user)
         # Set UID for Firestore
         user.uid = uid

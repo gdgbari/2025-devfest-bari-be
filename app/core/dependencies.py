@@ -2,7 +2,7 @@ from typing import Annotated
 from functools import lru_cache
 from fastapi import Depends
 
-from infrastructure.repositories.auth_repository import AuthRepository
+from infrastructure.repositories.firebase_auth_repository import FirebaseAuthRepository
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
 from infrastructure.repositories.user_repository import UserRepository
 from infrastructure.clients.firestore_client import FirestoreClient
@@ -27,9 +27,9 @@ def get_firestore_client() -> FirestoreClient:
 
 def get_auth_repository(
     auth_client: Annotated[FirebaseAuthClient, Depends(get_auth_client)]
-) -> AuthRepository:
+) -> FirebaseAuthRepository:
     """Dependency to get AuthRepository instance"""
-    return AuthRepository(auth_client)
+    return FirebaseAuthRepository(auth_client)
 
 def get_firestore_repository(
     firestore_client: Annotated[FirestoreClient, Depends(get_firestore_client)]
@@ -38,7 +38,7 @@ def get_firestore_repository(
     return FirestoreRepository(firestore_client)
 
 def get_user_repository(
-    auth_repository: Annotated[AuthRepository, Depends(get_auth_repository)],
+    auth_repository: Annotated[FirebaseAuthRepository, Depends(get_auth_repository)],
     firestore_repository: Annotated[FirestoreRepository, Depends(get_firestore_repository)]
 ) -> UserRepository:
     """Dependency to get UserRepository instance"""
