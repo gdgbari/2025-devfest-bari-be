@@ -11,6 +11,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.put(
     "/{uid}",
+    description="Update user information in Firebase Auth and Firestore",
     response_model=UpdateUserResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -25,6 +26,5 @@ def update_user(
     user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> UpdateUserResponse:
     
-    """Update user information in Firebase Auth and Firestore"""
     updated_user: User = user_service.update_user(uid, user_update.model_dump())
     return UpdateUserAdapters.to_update_response(updated_user)

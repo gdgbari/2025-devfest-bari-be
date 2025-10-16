@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional
 
 import firebase_admin
 from firebase_admin import credentials, firestore
-from google.cloud.firestore import SERVER_TIMESTAMP
 
 from core.settings import settings
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
@@ -23,6 +22,7 @@ class FirestoreClient:
         client.create_doc("collection", "doc_id", {"field": "value"})
     """
 
+
     def __init__(self) -> None:
         """
         Initializes the Firestore client and Firebase app if not already initialized.
@@ -35,9 +35,6 @@ class FirestoreClient:
         self.db = firestore.client()
         self._initialized: bool = True
 
-    #########################################################################################################
-    # Common functions                                                                                      #
-    #########################################################################################################
 
     def create_doc(
         self,
@@ -56,14 +53,12 @@ class FirestoreClient:
         Returns:
             str: The ID of the created document.
         """
-        try:
-            _, doc_ref = self.db.collection(collection_name).add(
-                document_data=doc_data,
-                document_id=doc_id,
-            )
-            return doc_ref.id
-        except Exception:
-            raise DocumentNotFoundError()
+        _, doc_ref = self.db.collection(collection_name).add(
+            document_data=doc_data,
+            document_id=doc_id,
+        )
+        return doc_ref.id
+
 
     def read_doc(self, collection_name: str, doc_id: str) -> Dict[str, Any]:
         """
@@ -87,6 +82,7 @@ class FirestoreClient:
         else:
             raise DocumentNotFoundError()
 
+
     def read_all_docs(
         self,
         collection_name: str,
@@ -109,6 +105,7 @@ class FirestoreClient:
         else:
             return [doc.to_dict() for doc in docs]
 
+
     def update_doc(
         self,
         collection_name: str,
@@ -129,6 +126,7 @@ class FirestoreClient:
         except Exception:
             raise DocumentNotFoundError()
 
+
     def delete_doc(self, collection_name: str, doc_id: str) -> None:
         """
         Deletes a document from a Firestore collection.
@@ -137,11 +135,13 @@ class FirestoreClient:
             collection_name (str): The name of the Firestore collection.
             doc_id (str): The document ID.
         """
-        try:
-            doc_ref = self.db.collection(collection_name).document(doc_id)
+        doc_ref = self.db.collection(collection_name).document(doc_id)
+        doc = doc_ref.get()
+        if doc.exists:
             doc_ref.delete()
-        except Exception:
+        else:
             raise DocumentNotFoundError()
+
 
     def delete_all_docs(self, collection_name: str) -> None:
         """
@@ -154,104 +154,3 @@ class FirestoreClient:
         docs = collection_ref.get()
         for doc in docs:
             doc.reference.delete()
-
-    #########################################################################################################
-    # Users related functions                                                                               #
-    #########################################################################################################
-
-    def create_user_doc(self, doc_id: str, user_data: Dict[str, Any]) -> None:
-        """
-        Creates a user document in the 'users' collection.
-
-        Args:
-            doc_id (str): The Firebase Auth uid to be used as document ID.
-            user_data (dict): The user data to store.
-        """
-        try:
-            self.create_doc("users", doc_id, user_data)
-        except Exception:
-            raise UserDataAlreadyExistsError()
-        
-    def create_nickname_doc(self, nickname: str) -> None:
-        """"
-        Creates a nickname document in the 'nicknames' collection.
-        """
-        try:
-            dict_nickname = {
-                "nickname":nickname,
-                "reserved_at":SERVER_TIMESTAMP
-            }
-            self.create_doc("nicknames", doc_id=nickname, doc_data=dict_nickname)
-        except Exception:
-            raise UserDataAlreadyExistsError()
-
-    def read_user_doc(self, doc_id: str) -> Dict[str, Any]:
-        """
-        Reads a user document from the 'users' collection by its ID.
-
-        Args:
-            doc_id (str): The user document ID.
-
-        Returns:
-            dict: The user document data.
-        """
-        try:
-            return self.read_doc("users", doc_id)
-        except Exception:
-            raise UserDataNotFoundError()
-
-    def read_all_user_docs(self) -> List[Dict[str, Any]]:
-        """
-        Reads all user documents from the 'users' collection.
-
-        Returns:
-            List[dict]: A list of user document data.
-        """
-        return self.read_all_docs(
-            collection_name="users",
-            include_id=True,
-            id_field_name="uid",
-        )
-
-    def update_user_doc(self, doc_id: str, user_data: Dict[str, Any]) -> None:
-        """
-        Updates a user document in the 'users' collection.
-
-        Args:
-            doc_id (str): The user document ID.
-            user_data (dict): The user data to update.
-        """
-        try:
-            self.update_doc("users", doc_id, user_data)
-        except Exception:
-            raise UserDataNotFoundError()
-
-    def delete_user_doc(self, doc_id: str) -> None:
-        """
-        Deletes a user document from the 'users' collection.
-
-        Args:
-            doc_id (str): The user document ID.
-        """
-        try:
-            self.delete_doc("users", doc_id)
-        except Exception:
-            raise UserDataNotFoundError()
-        
-    def delete_nickname_doc(self, nickname: str) -> None:
-        """
-        Deletes a nickname document from the 'nickname' collection.
-
-        Args:
-            nickname (str): The nickname.
-        """
-        try:
-            self.delete_doc("nicknames", nickname)
-        except Exception:
-            raise UserDataNotFoundError()
-
-    def delete_all_user_docs(self) -> None:
-        """
-        Deletes all user documents from the 'users' collection.
-        """
-        self.delete_all_docs("users")

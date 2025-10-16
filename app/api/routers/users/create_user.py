@@ -11,11 +11,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.post(
     "",
+    description="Endpoint for creating a new User in database",
     response_model=CreateUserResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"description": "Bad request - invalid data or user ID not specified"},
-        409: {"description": "User already exists - email already in use or user data already exists"},
+        409: {"description": "Nickname already used - User already exists - email already in use or user data already exists"},
         500: {"description": "Internal server error"},
     },
 )
@@ -24,7 +25,6 @@ def create_user(
     user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> CreateUserResponse:
     
-    """Create a new user in Firebase Auth and Firestore"""
     new_user: User = user_service.create_user(
         CreateUserAdapter.to_create_user_domain(request)
     )

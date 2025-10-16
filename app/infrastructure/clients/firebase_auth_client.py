@@ -16,6 +16,7 @@ class FirebaseAuthClient:
     Note: Use as a singleton through FastAPI's dependency injection with lru_cache.
     """
 
+
     def __init__(self) -> None:
         """
         Initialize the Firebase client and Firebase app if not already initialized.
@@ -26,6 +27,7 @@ class FirebaseAuthClient:
             )
             firebase_admin.initialize_app(cred)
         self._initialized: bool = True
+
 
     def create_user(
         self, email: str, password: str, display_name: Optional[str] = None
@@ -46,6 +48,7 @@ class FirebaseAuthClient:
         )
         return user_record.uid
 
+
     def read_user(self, uid: str) -> Dict[str, Any]:
         """
         Retrieve a user by their UID.
@@ -58,6 +61,7 @@ class FirebaseAuthClient:
         """
         user_record: UserRecord = auth.get_user(uid)
         return user_record._data
+
 
     def read_all_users(self) -> List[Dict[str, Any]]:
         """
@@ -73,6 +77,7 @@ class FirebaseAuthClient:
                 users.append(user._data)
             page = page.get_next_page()
         return users
+
 
     def update_user(
         self,
@@ -103,6 +108,7 @@ class FirebaseAuthClient:
         user_record = auth.update_user(uid, **params)
         return user_record._data
 
+
     def delete_user(self, uid: str) -> None:
         """
         Delete a user by their UID.
@@ -111,6 +117,7 @@ class FirebaseAuthClient:
             uid (str): The UID of the user to delete.
         """
         auth.delete_user(uid)
+
 
     def delete_all_users(self) -> None:
         """

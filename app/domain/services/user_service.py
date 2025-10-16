@@ -3,24 +3,23 @@ from infrastructure.repositories.user_repository import UserRepository
 
 class UserService:
     """"
-    Service that manages all the interaction related with a user
+    Service that manages all the operations related with a user
     """
 
+
     def __init__(
-        self, 
+        self,
         user_repository: UserRepository
     ):
         self.user_repository = user_repository
+
 
     def create_user(self, user: User) -> User:
         """
         Creates a user in database.
         """
-        try:
-            self.user_repository.create(user)
-        except:
-            # Rollback
-            self.delete_user(user.uid)
+        return self.user_repository.create(user)
+
 
     def read_user(self, uid: str) -> User:
         """
@@ -28,11 +27,13 @@ class UserService:
         """
         return self.user_repository.read(uid)
 
+
     def read_all_users(self) -> list[User]:
         """
         Reads all users in database.
         """
         return self.user_repository.read_all()
+
 
     def update_user(self, uid: str, user_update: dict) -> User:
         """
@@ -40,12 +41,15 @@ class UserService:
         """
         current_user: User = self.read_user(uid)
         return self.user_repository.update(user_update=user_update, current_user=current_user)
-    
+
+
     def delete_user(self, uid: str) -> None:
         """
         Deletes a user from the database.
         """
-        self.user_repository.delete(uid)
+        user = self.read_user(uid)
+        self.user_repository.delete(uid, user.nickname)
+
 
     def delete_all_users(self) -> None:
         """

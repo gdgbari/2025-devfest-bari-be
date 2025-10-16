@@ -7,6 +7,7 @@ from api.include_routers import include_routers
 from core.logging import setup_logging
 from core.middleware import add_middlewares
 from core.settings import settings
+from core.exception_handler import register_exception_handlers
 
 app = FastAPI(
     title="DevFest Bari 2025 Backend",
@@ -18,6 +19,7 @@ app = FastAPI(
 
 
 add_middlewares(app)
+register_exception_handlers(app)
 include_routers(app)
 setup_logging()
 

@@ -11,6 +11,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.get(
     "",
+    description="Get all users from Firebase Auth and Firestore",
     response_model=GetUserListResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -20,14 +21,14 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def read_all_users(
     user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> GetUserListResponse:
-    
-    """Get all users from Firebase Auth and Firestore"""
+
     users: list[User] = user_service.read_all_users()
     return ReadUserAdapters.to_get_users_response(users)
 
 
 @router.get(
     "/{uid}",
+    description="Get user by UID from Firebase Auth and Firestore",
     response_model=GetUserResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -40,6 +41,5 @@ def read_user(
     user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> GetUserResponse:
     
-    """Get user by UID from Firebase Auth and Firestore"""
     user: User = user_service.read_user(uid)
     return ReadUserAdapters.to_get_user_response(user)

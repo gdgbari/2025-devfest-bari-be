@@ -8,9 +8,11 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.delete(
     "/{uid}",
+    description="Delete user from Firebase Auth and Firestore",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         404: {"description": "User not found - either in Firebase Auth or Firestore"},
+        400: {"description": "Error during deletion"},
         500: {"description": "Internal server error"},
     },
 )
@@ -18,19 +20,21 @@ def delete_user(
     uid: str,
     user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> None:
-    """Delete user from Firebase Auth and Firestore"""
+    
     user_service.delete_user(uid)
 
 
 @router.delete(
     "",
+    description="Delete all users from Firebase Auth and Firestore (use with caution!)",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
+        400: {"description": "Error during deletion"},
         500: {"description": "Internal server error"}
     },
 )
 def delete_all_users(
     user_service: Annotated[UserService, Depends(get_user_service)]
 ) -> None:
-    """Delete all users from Firebase Auth and Firestore (use with caution!)"""
+
     user_service.delete_all_users()
