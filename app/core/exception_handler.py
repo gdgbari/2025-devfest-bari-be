@@ -37,3 +37,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UpdateUserError)
     async def update_user_auth_error_handler(request: Request, exc: UpdateUserError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
+    
+    @app.exception_handler(Exception)
+    async def generic_exception_handler(request: Request, exc: Exception):
+        raise HTTPException(status_code=500, detail=exc.message)
