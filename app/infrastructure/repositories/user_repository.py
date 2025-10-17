@@ -42,7 +42,7 @@ class UserRepository:
             self.firestore_repository.delete_nickname(user.nickname)
             self.auth_repository.delete_auth(user.uid)
             raise e
-    
+
 
     def delete(self, uid: str, nickname: str) -> None:
         """
@@ -69,7 +69,7 @@ class UserRepository:
         Reads a user from Firestore and returns it as a response schema.
         """
         return User.from_dict(self.firestore_repository.read_user(uid))
-    
+
 
     def read_all(self) -> list[User]:
         """
@@ -77,8 +77,8 @@ class UserRepository:
         """
         users: list[dict] = self.firestore_repository.read_all_users()
         return [User.from_dict(user) for user in users]
-    
-    
+
+
     def update(self, user_update: dict, current_user: User) -> User:
         """
         Update a current user with the update information and then
