@@ -1,0 +1,12 @@
+services:
+  api:
+    build:
+      context: .
+    restart: unless-stopped
+    image: devfest-bari-2025-api
+    container_name: devfest-bari-2025-api-container
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
