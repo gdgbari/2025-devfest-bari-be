@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 class GetUserResponse(UserBaseSchema):
     uid: str
-    role: Optional[str] = None
     group: Optional[str] = None
 
 
