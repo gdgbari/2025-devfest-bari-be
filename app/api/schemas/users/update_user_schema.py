@@ -12,5 +12,4 @@ class UpdateUserRequest(BaseModel):
 
 class UpdateUserResponse(UserBaseSchema):
     uid: str
-    role: Optional[str] = None
     group: Optional[str] = None

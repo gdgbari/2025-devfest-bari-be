@@ -15,6 +15,5 @@ class UpdateUserAdapters:
             name=user.name,
             surname=user.surname,
             nickname=user.nickname,
-            role=user.role,
             group=user.group
         )

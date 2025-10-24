@@ -43,7 +43,7 @@ def _authorize_token(creds: HTTPAuthorizationCredentials = Depends(token_auth_sc
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token not valid or expired: {e}",
+            detail="Not Authorized",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -77,7 +77,7 @@ def authorize(min_role: Role = Role.ATTENDEE):
         if not user.role.is_authorized(min_role):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Insufficient privileges. Required: {min_role.value}, Current: {user.role.value}",
+                detail="Not Authorized",
             )
 
         return user
