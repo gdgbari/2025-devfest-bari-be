@@ -34,14 +34,19 @@ def verify_id_token(
     creds: HTTPAuthorizationCredentials = Depends(token_auth_scheme),
 ) -> UserToken:
     """
-    Verify firebase token ID, if valid gets back user data, otherwise throw HTTPException
+    Verify firebase token ID, if valid gets back user data, otherwise throw HTTPException.
+    Also verifies that the user still exists in Firebase Auth.
     """
     authClientDep = AuthClientDep
 
     token = creds.credentials
     try:
         decoded_token = auth.verify_id_token(token)
-        return UserToken.model_validate(decoded_token)
+        user_token = UserToken.model_validate(decoded_token)
+        auth.get_user(user_token.uid)
+        return user_token
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
