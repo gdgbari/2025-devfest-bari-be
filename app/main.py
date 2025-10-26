@@ -1,17 +1,19 @@
 import os
 
 import uvicorn
+from fastapi import FastAPI
+
 from api.include_routers import include_routers
 from core.exception_handler import register_exception_handlers
 from core.logging import setup_logging
 from core.middleware import add_middlewares
 from core.settings import settings
-from fastapi import FastAPI
 
 app = FastAPI(
     title="DevFest Bari 2025 Backend",
     description="APIs for engagement system - GDG Bari",
     debug=settings.debug,
+    docs_url="/api/docs",
     version=settings.version,
 )
 

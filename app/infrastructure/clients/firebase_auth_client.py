@@ -46,6 +46,10 @@ class FirebaseAuthClient:
         user_record: UserRecord = auth.create_user(
             email=email, password=password, display_name=display_name
         )
+        auth.set_custom_user_claims(
+            uid=user_record.uid,
+            custom_claims={"user_role": "attendee"},
+        )
         return user_record.uid
 
 
