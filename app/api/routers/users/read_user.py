@@ -26,6 +26,22 @@ def read_all_users(
 
 
 @router.get(
+    "/me",
+    description="Get current authenticated user from Firebase Auth and Firestore",
+    response_model=GetUserResponse,
+    status_code=status.HTTP_200_OK,
+)
+def read_current_user(
+    user_service: UserServiceDep,
+    user_token=Depends(verify_id_token),
+) -> GetUserResponse:
+
+    uid = user_token.uid
+    user: User = user_service.read_user(uid)
+    return ReadUserAdapters.to_get_user_response(user)
+
+
+@router.get(
     "/{uid}",
     description="Get user by UID from Firebase Auth and Firestore",
     response_model=GetUserResponse,
