@@ -1,9 +1,10 @@
+from fastapi import APIRouter, status
+
 from api.adapters.users.create_user_adapter import CreateUserAdapter
 from api.schemas.users.create_user_schema import (CreateUserRequest,
                                                   CreateUserResponse)
 from core.dependencies import UserServiceDep
 from domain.entities.user import User
-from fastapi import APIRouter, status
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

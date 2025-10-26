@@ -1,10 +1,11 @@
+from fastapi import APIRouter, Depends, status
+
 from api.adapters.users.update_user_adapter import UpdateUserAdapters
 from api.schemas.users.update_user_schema import (UpdateUserRequest,
                                                   UpdateUserResponse)
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import UserServiceDep
 from domain.entities.user import User
-from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
