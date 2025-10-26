@@ -40,7 +40,7 @@ class FirestoreClient:
         self,
         collection_name: str,
         doc_id: Optional[str],
-        doc_data: Dict[str, Any],
+        doc_data: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Creates a document in the specified Firestore collection.

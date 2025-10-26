@@ -59,7 +59,7 @@ class FirestoreRepository:
         """
         try:
             dict_nickname = {"nickname":nickname}
-            self.firestore_client.create_doc("nicknames", doc_id=nickname, doc_data=dict_nickname)
+            self.firestore_client.create_doc("nicknames", doc_id=nickname)
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
                 raise ReserveNicknameError(message=f"Nickname already existing: {str(nickname)}", http_status=409)
