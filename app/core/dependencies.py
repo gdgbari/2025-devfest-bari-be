@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from domain.services.group_service import GroupService
 from domain.services.user_service import UserService
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
 from infrastructure.clients.firestore_client import FirestoreClient
@@ -10,6 +11,7 @@ from infrastructure.repositories.firebase_auth_repository import \
     FirebaseAuthRepository
 from infrastructure.repositories.firestore_repository import \
     FirestoreRepository
+from infrastructure.repositories.group_repository import GroupRepository
 from infrastructure.repositories.user_repository import UserRepository
 
 
@@ -44,10 +46,10 @@ AuthRepositoryDep = Annotated[FirebaseAuthRepository, Depends(get_auth_repositor
 def get_firestore_repository(
     firestore_client: FirestoreClientDep
 ) -> FirestoreRepository:
-    """Dependency to get UserRepository instance"""
+    """Dependency to get FirestoreRepository instance"""
     return FirestoreRepository(firestore_client)
 
-FirestoreRepositoryDep = Annotated[FirebaseAuthRepository, Depends(get_firestore_repository)]
+FirestoreRepositoryDep = Annotated[FirestoreRepository, Depends(get_firestore_repository)]
 
 def get_user_repository(
     auth_repository: AuthRepositoryDep,
@@ -56,7 +58,7 @@ def get_user_repository(
     """Dependency to get UserRepository instance"""
     return UserRepository(auth_repository, firestore_repository)
 
-UserRepositoryDep = Annotated[UserService, Depends(get_user_repository)]
+UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
 
 def get_user_service(
     user_repository: UserRepositoryDep
@@ -65,3 +67,21 @@ def get_user_service(
     return UserService(user_repository)
 
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
+
+
+def get_group_repository(
+    firestore_repository: FirestoreRepositoryDep
+) -> GroupRepository:
+    """Dependency to get GroupRepository instance"""
+    return GroupRepository(firestore_repository)
+
+GroupRepositoryDep = Annotated[GroupRepository, Depends(get_group_repository)]
+
+
+def get_group_service(
+    group_repository: GroupRepositoryDep
+) -> GroupService:
+    """Dependency to get GroupService with injected repository"""
+    return GroupService(group_repository)
+
+GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]

@@ -1,7 +1,8 @@
+from domain.entities.group import Group
 from domain.entities.user import User
 from infrastructure.clients.firestore_client import FirestoreClient
-from infrastructure.errors.user_errors import *
 from infrastructure.errors.firestore_errors import *
+from infrastructure.errors.user_errors import *
 
 
 class FirestoreRepository:
@@ -253,3 +254,94 @@ class FirestoreRepository:
             raise UpdateUserError(message=f"Failed to update user {str(uid)}: User was not found", http_status=404)
         except Exception as e:
             raise UpdateUserError(message=f"Failed to update user {str(uid)}: {str(e)}", http_status=400)
+
+
+    def create_group(self, group_data) -> str:
+        """
+        Creates a new group document in the Firestore 'groups' collection.
+        Returns the document ID.
+        """
+        try:
+            doc_id = self.firestore_client.create_doc(
+                collection_name="groups", doc_id=None, doc_data=group_data.to_firestore_data()
+            )
+            return doc_id
+        except Exception as exception:
+            if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
+                from infrastructure.errors.group_errors import CreateGroupError
+                raise CreateGroupError(message=f"Failed to create group: {str(exception)}", http_status=409)
+            from infrastructure.errors.group_errors import CreateGroupError
+            raise CreateGroupError(message=f"Failed to create group: {str(exception)}", http_status=400)
+
+    def read_group(self, gid: str) -> dict:
+        """
+        Retrieves a single group document from the Firestore 'groups' collection.
+        """
+        try:
+            group_data_dict = self.firestore_client.read_doc(collection_name="groups", doc_id=gid)
+            return {"gid": gid, **group_data_dict}
+        except DocumentNotFoundError as e:
+            from infrastructure.errors.group_errors import ReadGroupError
+            raise ReadGroupError(message=f"Failed to read group {str(gid)}: Group was not found", http_status=404)
+        except Exception as e:
+            from infrastructure.errors.group_errors import ReadGroupError
+            raise ReadGroupError(message=f"Failed to read group {str(gid)}: {str(e)}", http_status=400)
+
+    def read_all_groups(self) -> list[dict]:
+        """
+        Retrieves all group documents from the Firestore 'groups' collection.
+        """
+        try:
+            groups = self.firestore_client.read_all_docs(
+                collection_name="groups",
+                include_id=True,
+                id_field_name="gid",
+            )
+            return groups
+        except Exception as e:
+            from infrastructure.errors.group_errors import ReadGroupError
+            raise ReadGroupError(message=f"Failed to read all groups: {str(e)}", http_status=400)
+
+    def delete_group(self, gid: str) -> None:
+        """
+        Deletes a group document from the Firestore 'groups' collection.
+        """
+        try:
+            self.firestore_client.delete_doc(collection_name="groups", doc_id=gid)
+        except DocumentNotFoundError as e:
+            from infrastructure.errors.group_errors import DeleteGroupError
+            raise DeleteGroupError(message=f"Failed to delete group {str(gid)} in firestore: Group was not found", http_status=404)
+        except Exception as e:
+            from infrastructure.errors.group_errors import DeleteGroupError
+            raise DeleteGroupError(message=f"Failed to delete group {str(gid)} in firestore: {str(e)}", http_status=400)
+
+    def delete_all_groups(self) -> None:
+        """
+        Deletes all group documents from the Firestore 'groups' collection.
+        """
+        try:
+            self.firestore_client.delete_all_docs("groups")
+        except Exception as e:
+            from infrastructure.errors.group_errors import DeleteGroupError
+            raise DeleteGroupError(message=f"Failed to delete all groups in firestore: {str(e)}", http_status=400)
+
+    def update_group(self, gid: str, group_data: dict) -> None:
+        """
+        Updates an existing group document in the Firestore 'groups' collection.
+        """
+        try:
+            update_params = {}
+            if "name" in group_data and group_data["name"] is not None:
+                update_params["name"] = group_data["name"]
+            if "color" in group_data and group_data["color"] is not None:
+                update_params["color"] = group_data["color"]
+            if "image_url" in group_data and group_data["image_url"] is not None:
+                update_params["image_url"] = group_data["image_url"]
+
+            self.firestore_client.update_doc("groups", doc_id=gid, doc_data=update_params)
+        except DocumentNotFoundError as e:
+            from infrastructure.errors.group_errors import UpdateGroupError
+            raise UpdateGroupError(message=f"Failed to update group {str(gid)}: Group was not found", http_status=404)
+        except Exception as e:
+            from infrastructure.errors.group_errors import UpdateGroupError
+            raise UpdateGroupError(message=f"Failed to update group {str(gid)}: {str(e)}", http_status=400)

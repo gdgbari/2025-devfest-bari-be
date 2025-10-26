@@ -1,0 +1,34 @@
+from typing import Optional
+
+from pydantic import BaseModel
+
+
+class Group(BaseModel):
+    """
+    Domain object representing a Group
+    """
+
+    name: str
+    color: str
+    image_url: str
+    user_count: int
+    gid: Optional[str] = None
+
+    @staticmethod
+    def from_dict(data: dict) -> "Group":
+        return Group(
+            name=data["name"],
+            color=data["color"],
+            image_url=data["image_url"],
+            user_count=data["user_count"],
+            gid=data["gid"] if "gid" in data else None,
+        )
+
+    def to_firestore_data(self) -> dict:
+        return {
+            "name": self.name,
+            "color": self.color,
+            "image_url": self.image_url,
+            "user_count": self.user_count,
+        }
+
