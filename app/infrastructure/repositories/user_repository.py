@@ -9,6 +9,10 @@ class UserRepository:
     Repository for managing all user operations coordinating firebase auth and firestore
     """
 
+    # User field names
+    USER_EMAIL: str = "email"
+    USER_NAME: str = "name"
+    USER_SURNAME: str = "surname"
 
     def __init__(
         self,
@@ -85,7 +89,7 @@ class UserRepository:
         return the user updated. If email is present in the updated fields is gonna
         update also the authentication
         """
-        if user_update["email"]:
+        if user_update[self.USER_EMAIL]:
             # Update in Firebase Auth
             self.auth_repository.update_user_auth(current_user.uid, user_update)
 
@@ -94,9 +98,9 @@ class UserRepository:
 
         return User(
             uid=current_user.uid,
-            email=user_update["email"] if user_update["email"] is not None else current_user.email,
-            name=user_update["name"] if user_update["name"] is not None else current_user.name,
-            surname=user_update["surname"] if user_update["surname"] is not None else current_user.surname,
+            email=user_update[self.USER_EMAIL] if user_update[self.USER_EMAIL] is not None else current_user.email,
+            name=user_update[self.USER_NAME] if user_update[self.USER_NAME] is not None else current_user.name,
+            surname=user_update[self.USER_SURNAME] if user_update[self.USER_SURNAME] is not None else current_user.surname,
             nickname=current_user.nickname,
             role=current_user.role,
             group=current_user.group

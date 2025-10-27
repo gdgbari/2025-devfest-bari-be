@@ -9,6 +9,8 @@ class FirebaseAuthRepository:
     Repository with db interaction realted with authentication operations
     """
 
+    # User field names
+    USER_EMAIL: str = "email"
 
     def __init__(
         self,
@@ -55,7 +57,7 @@ class FirebaseAuthRepository:
                 - HTTP 400: Invalid UID, email format, or other Firebase Auth errors
         """
         try:
-            user_record = self.auth_client.update_user(uid, email=user_data["email"])
+            user_record = self.auth_client.update_user(uid, email=user_data[self.USER_EMAIL])
             return user_record
         except Exception as e:
             raise UpdateUserAuthError(message=f"Failed to update user authentication {str(uid)}: {str(e)}", http_status=400)

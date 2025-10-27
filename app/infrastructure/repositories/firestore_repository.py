@@ -1,4 +1,3 @@
-from domain.entities.group import Group
 from domain.entities.user import User
 from infrastructure.clients.firestore_client import FirestoreClient
 from infrastructure.errors.firestore_errors import *
@@ -10,10 +9,21 @@ class FirestoreRepository:
     Repository with db interaction related to user data operations in Firestore
     """
 
+    # Collection names
+    USERS_COLLECTION: str = "users"
+    NICKNAMES_COLLECTION: str = "nicknames"
+
+    # User field names
+    USER_ID: str = "uid"
+    USER_EMAIL: str = "email"
+    USER_NAME: str = "name"
+    USER_SURNAME: str = "surname"
+    USER_NICKNAME: str = "nickname"
+    USER_GROUP: str = "group"
 
     def __init__(
         self,
-        firestore_client: FirestoreClient,
+        firestore_client: FirestoreClient
     ):
         self.firestore_client = firestore_client
 
@@ -33,7 +43,7 @@ class FirestoreRepository:
         """
         try:
             self.firestore_client.create_doc(
-                collection_name="users", doc_id=user_data.uid, doc_data=user_data.to_firestore_data()
+                collection_name=self.USERS_COLLECTION, doc_id=user_data.uid, doc_data=user_data.to_firestore_data()
             )
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
@@ -58,7 +68,7 @@ class FirestoreRepository:
                 - HTTP 400: Invalid nickname format or other Firestore operation errors
         """
         try:
-            self.firestore_client.create_doc("nicknames", doc_id=nickname)
+            self.firestore_client.create_doc(self.NICKNAMES_COLLECTION, doc_id=nickname)
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
                 raise ReserveNicknameError(message=f"Nickname already existing: {str(nickname)}", http_status=409)
@@ -80,8 +90,8 @@ class FirestoreRepository:
         Returns:
             None: The user_data dict is modified in place.
         """
-        if "group" in user_data and user_data["group"] is not None:
-            group_ref = user_data["group"]
+        if self.USER_GROUP in user_data and user_data[self.USER_GROUP] is not None:
+            group_ref = user_data[self.USER_GROUP]
             # Check if it's a DocumentReference
             if hasattr(group_ref, 'get'):
                 try:
@@ -89,15 +99,15 @@ class FirestoreRepository:
                     if group_doc.exists:
                         group_data = group_doc.to_dict()
                         # Extract only the name from the group
-                        user_data["group"] = group_data.get("name") if group_data else None
+                        user_data[self.USER_GROUP] = group_data.get(self.USER_NAME) if group_data else None
                     else:
-                        user_data["group"] = None
+                        user_data[self.USER_GROUP] = None
                 except Exception:
                     # If fetching the group fails, set to None
-                    user_data["group"] = None
+                    user_data[self.USER_GROUP] = None
             # If it's not a DocumentReference and not a string, set to None
             elif not isinstance(group_ref, str):
-                user_data["group"] = None
+                user_data[self.USER_GROUP] = None
 
     def read_user(self, uid: str) -> dict:
         """
@@ -113,9 +123,9 @@ class FirestoreRepository:
                 - HTTP 400: Invalid UID format or other Firestore operation errors
         """
         try:
-            user_data_dict = self.firestore_client.read_doc(collection_name="users", doc_id=uid)
+            user_data_dict = self.firestore_client.read_doc(collection_name=self.USERS_COLLECTION, doc_id=uid)
             self._resolve_group_reference(user_data_dict)
-            return {"uid": uid, **user_data_dict}
+            return {self.USER_ID: uid, **user_data_dict}
         except DocumentNotFoundError as e:
             raise ReadUserError(message=f"Failed to read user {str(uid)}: User was not found", http_status=404)
         except Exception as e:
@@ -135,9 +145,9 @@ class FirestoreRepository:
         """
         try:
             users = self.firestore_client.read_all_docs(
-                collection_name="users",
+                collection_name=self.USERS_COLLECTION,
                 include_id=True,
-                id_field_name="uid",
+                id_field_name=self.USER_ID,
             )
             for user in users:
                 self._resolve_group_reference(user)
@@ -160,7 +170,7 @@ class FirestoreRepository:
                 - HTTP 400: Invalid UID format or other Firestore operation errors
         """
         try:
-            self.firestore_client.delete_doc(collection_name="users",doc_id=uid)
+            self.firestore_client.delete_doc(collection_name=self.USERS_COLLECTION, doc_id=uid)
         except DocumentNotFoundError as e:
             raise DeleteUserError(message=f"Failed to delete user {str(uid)} in firestore: User was not found", http_status=404)
         except Exception as e:
@@ -181,7 +191,7 @@ class FirestoreRepository:
                 - HTTP 400: Invalid nickname format or other Firestore operation errors
         """
         try:
-            self.firestore_client.delete_doc(collection_name="nicknames",doc_id=nickname)
+            self.firestore_client.delete_doc(collection_name=self.NICKNAMES_COLLECTION, doc_id=nickname)
         except DocumentNotFoundError as e:
             raise DeleteUserError(message=f"Failed to delete nickname {str(nickname)} in firestore: Nickname not found", http_status=404)
         except Exception as e:
@@ -202,7 +212,7 @@ class FirestoreRepository:
                 - HTTP 400: Firestore operation errors or collection access issues
         """
         try:
-            self.firestore_client.delete_all_docs("users")
+            self.firestore_client.delete_all_docs(self.USERS_COLLECTION)
         except Exception as e:
             raise DeleteUserError(message=f"Failed to delete all users in firestore: {str(e)}", http_status=400)
 
@@ -221,7 +231,7 @@ class FirestoreRepository:
                 - HTTP 400: Firestore operation errors or collection access issues
         """
         try:
-            self.firestore_client.delete_all_docs("nicknames")
+            self.firestore_client.delete_all_docs(self.NICKNAMES_COLLECTION)
         except Exception as e:
             raise DeleteUserError(message=f"Failed to delete all nicknames in firestore: {str(e)}", http_status=400)
 
@@ -241,106 +251,15 @@ class FirestoreRepository:
         """
         try:
             update_params = {}
-            if user_data["email"]:
-                update_params["email"] = user_data["email"]
-            if user_data["name"]:
-                update_params["name"] = user_data["name"]
-            if user_data["surname"]:
-                update_params["surname"] = user_data["surname"]
+            if user_data[self.USER_EMAIL]:
+                update_params[self.USER_EMAIL] = user_data[self.USER_EMAIL]
+            if user_data[self.USER_NAME]:
+                update_params[self.USER_NAME] = user_data[self.USER_NAME]
+            if user_data[self.USER_SURNAME]:
+                update_params[self.USER_SURNAME] = user_data[self.USER_SURNAME]
 
-            self.firestore_client.update_doc("users", doc_id=uid, doc_data=update_params)
+            self.firestore_client.update_doc(self.USERS_COLLECTION, doc_id=uid, doc_data=update_params)
         except DocumentNotFoundError as e:
             raise UpdateUserError(message=f"Failed to update user {str(uid)}: User was not found", http_status=404)
         except Exception as e:
             raise UpdateUserError(message=f"Failed to update user {str(uid)}: {str(e)}", http_status=400)
-
-
-    def create_group(self, group_data) -> str:
-        """
-        Creates a new group document in the Firestore 'groups' collection.
-        Returns the document ID.
-        """
-        try:
-            doc_id = self.firestore_client.create_doc(
-                collection_name="groups", doc_id=None, doc_data=group_data.to_firestore_data()
-            )
-            return doc_id
-        except Exception as exception:
-            if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
-                from infrastructure.errors.group_errors import CreateGroupError
-                raise CreateGroupError(message=f"Failed to create group: {str(exception)}", http_status=409)
-            from infrastructure.errors.group_errors import CreateGroupError
-            raise CreateGroupError(message=f"Failed to create group: {str(exception)}", http_status=400)
-
-    def read_group(self, gid: str) -> dict:
-        """
-        Retrieves a single group document from the Firestore 'groups' collection.
-        """
-        try:
-            group_data_dict = self.firestore_client.read_doc(collection_name="groups", doc_id=gid)
-            return {"gid": gid, **group_data_dict}
-        except DocumentNotFoundError as e:
-            from infrastructure.errors.group_errors import ReadGroupError
-            raise ReadGroupError(message=f"Failed to read group {str(gid)}: Group was not found", http_status=404)
-        except Exception as e:
-            from infrastructure.errors.group_errors import ReadGroupError
-            raise ReadGroupError(message=f"Failed to read group {str(gid)}: {str(e)}", http_status=400)
-
-    def read_all_groups(self) -> list[dict]:
-        """
-        Retrieves all group documents from the Firestore 'groups' collection.
-        """
-        try:
-            groups = self.firestore_client.read_all_docs(
-                collection_name="groups",
-                include_id=True,
-                id_field_name="gid",
-            )
-            return groups
-        except Exception as e:
-            from infrastructure.errors.group_errors import ReadGroupError
-            raise ReadGroupError(message=f"Failed to read all groups: {str(e)}", http_status=400)
-
-    def delete_group(self, gid: str) -> None:
-        """
-        Deletes a group document from the Firestore 'groups' collection.
-        """
-        try:
-            self.firestore_client.delete_doc(collection_name="groups", doc_id=gid)
-        except DocumentNotFoundError as e:
-            from infrastructure.errors.group_errors import DeleteGroupError
-            raise DeleteGroupError(message=f"Failed to delete group {str(gid)} in firestore: Group was not found", http_status=404)
-        except Exception as e:
-            from infrastructure.errors.group_errors import DeleteGroupError
-            raise DeleteGroupError(message=f"Failed to delete group {str(gid)} in firestore: {str(e)}", http_status=400)
-
-    def delete_all_groups(self) -> None:
-        """
-        Deletes all group documents from the Firestore 'groups' collection.
-        """
-        try:
-            self.firestore_client.delete_all_docs("groups")
-        except Exception as e:
-            from infrastructure.errors.group_errors import DeleteGroupError
-            raise DeleteGroupError(message=f"Failed to delete all groups in firestore: {str(e)}", http_status=400)
-
-    def update_group(self, gid: str, group_data: dict) -> None:
-        """
-        Updates an existing group document in the Firestore 'groups' collection.
-        """
-        try:
-            update_params = {}
-            if "name" in group_data and group_data["name"] is not None:
-                update_params["name"] = group_data["name"]
-            if "color" in group_data and group_data["color"] is not None:
-                update_params["color"] = group_data["color"]
-            if "image_url" in group_data and group_data["image_url"] is not None:
-                update_params["image_url"] = group_data["image_url"]
-
-            self.firestore_client.update_doc("groups", doc_id=gid, doc_data=update_params)
-        except DocumentNotFoundError as e:
-            from infrastructure.errors.group_errors import UpdateGroupError
-            raise UpdateGroupError(message=f"Failed to update group {str(gid)}: Group was not found", http_status=404)
-        except Exception as e:
-            from infrastructure.errors.group_errors import UpdateGroupError
-            raise UpdateGroupError(message=f"Failed to update group {str(gid)}: {str(e)}", http_status=400)

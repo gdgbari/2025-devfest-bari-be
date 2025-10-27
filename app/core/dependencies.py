@@ -70,10 +70,10 @@ UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 
 
 def get_group_repository(
-    firestore_repository: FirestoreRepositoryDep
+    firestore_client: FirestoreClientDep
 ) -> GroupRepository:
     """Dependency to get GroupRepository instance"""
-    return GroupRepository(firestore_repository)
+    return GroupRepository(firestore_client)
 
 GroupRepositoryDep = Annotated[GroupRepository, Depends(get_group_repository)]
 
