@@ -58,7 +58,6 @@ class FirestoreRepository:
                 - HTTP 400: Invalid nickname format or other Firestore operation errors
         """
         try:
-            dict_nickname = {"nickname":nickname}
             self.firestore_client.create_doc("nicknames", doc_id=nickname)
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
