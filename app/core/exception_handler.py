@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 
 from infrastructure.errors.user_errors import *
 from infrastructure.errors.auth_errors import *
@@ -37,6 +37,13 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(UpdateUserError)
     async def update_user_auth_error_handler(request: Request, exc: UpdateUserError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
+    
+    @app.exception_handler(UnauthorizedError)
+    async def unauthorized_error_handler(request: Request, exc: UnauthorizedError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized",
+        )
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):

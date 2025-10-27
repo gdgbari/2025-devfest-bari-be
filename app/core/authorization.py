@@ -6,6 +6,7 @@ from firebase_admin import auth
 from pydantic import BaseModel, EmailStr
 
 from core.dependencies import AuthClientDep
+from infrastructure.errors.auth_errors import UnauthorizedError
 from domain.entities.role import Role
 
 
@@ -47,11 +48,8 @@ def verify_id_token(
         return user_token
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not Authorized",
-        )
+    except Exception:
+        raise UnauthorizedError
 
 
 def check_user_role(
@@ -66,7 +64,4 @@ def check_user_role(
 
     user_role = Role(user_token.user_role)
     if not user_role.is_authorized(min_role):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
-        )
+        raise UnauthorizedError
