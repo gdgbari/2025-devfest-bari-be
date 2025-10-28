@@ -15,6 +15,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
     description="Get all users from Firebase Auth and Firestore",
     response_model=GetUserListResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "List of users retrieved successfully"},
+        400: {"description": "Bad request - Firestore operation failed"},
+        401: {"description": "Unauthorized - Invalid or expired token"},
+        500: {"description": "Internal server error"},
+    },
 )
 def read_all_users(
     user_service: UserServiceDep,
@@ -31,6 +37,13 @@ def read_all_users(
     description="Get current authenticated user from Firebase Auth and Firestore",
     response_model=GetUserResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "User retrieved successfully"},
+        400: {"description": "Bad request - Firestore operation failed"},
+        401: {"description": "Unauthorized - Invalid or expired token"},
+        404: {"description": "Not found - User not found in Firestore"},
+        500: {"description": "Internal server error"},
+    },
 )
 def read_current_user(
     user_service: UserServiceDep,
@@ -47,6 +60,13 @@ def read_current_user(
     description="Get user by UID from Firebase Auth and Firestore",
     response_model=GetUserResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "User retrieved successfully"},
+        400: {"description": "Bad request - Firestore operation failed"},
+        401: {"description": "Unauthorized - Invalid or expired token"},
+        404: {"description": "Not found - User not found in Firestore"},
+        500: {"description": "Internal server error"},
+    },
 )
 def read_user(
     uid: str,

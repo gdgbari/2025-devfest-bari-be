@@ -15,6 +15,13 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
     description="Endpoint for creating a new Group in database",
     response_model=CreateGroupResponse,
     status_code=status.HTTP_201_CREATED,
+    responses={
+        201: {"description": "Group created successfully"},
+        400: {"description": "Bad request - Invalid group data or Firestore operation failed"},
+        401: {"description": "Unauthorized - Invalid or expired token"},
+        409: {"description": "Conflict - Group already exists"},
+        500: {"description": "Internal server error"},
+    },
 )
 def create_group(
     request: CreateGroupRequest,

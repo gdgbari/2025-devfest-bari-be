@@ -14,6 +14,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
     description="Endpoint for creating a new User in database",
     response_model=CreateUserResponse,
     status_code=status.HTTP_201_CREATED,
+    responses={
+        201: {"description": "User created successfully"},
+        400: {"description": "Bad request - Invalid user data or Firebase operation failed"},
+        409: {"description": "Conflict - Email or nickname already exists"},
+        500: {"description": "Internal server error"},
+    },
 )
 def create_user(
     request: CreateUserRequest,

@@ -15,6 +15,13 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
     description="Update group information in Firestore by name (GID)",
     response_model=UpdateGroupResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Group updated successfully"},
+        400: {"description": "Bad request - Invalid data or Firestore operation failed"},
+        401: {"description": "Unauthorized - Invalid or expired token"},
+        404: {"description": "Not found - Group not found in Firestore"},
+        500: {"description": "Internal server error"},
+    },
 )
 def update_group(
     gid: str,

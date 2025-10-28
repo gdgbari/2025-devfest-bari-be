@@ -15,6 +15,13 @@ router = APIRouter(prefix="/users", tags=["Users"])
     description="Update user information in Firebase Auth and Firestore",
     response_model=UpdateUserResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "User updated successfully"},
+        400: {"description": "Bad request - Invalid data or Firebase operation failed"},
+        401: {"description": "Unauthorized - Invalid or expired token"},
+        404: {"description": "Not found - User not found in Firestore"},
+        500: {"description": "Internal server error"},
+    },
 )
 def update_user(
     uid: str,
