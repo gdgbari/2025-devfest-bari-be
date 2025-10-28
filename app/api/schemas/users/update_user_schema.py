@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from api.schemas.users.base_schema import UserBaseSchema
 from pydantic import BaseModel
@@ -12,4 +12,4 @@ class UpdateUserRequest(BaseModel):
 
 class UpdateUserResponse(UserBaseSchema):
     uid: str
-    group: Optional[str] = None
+    group: Optional[Dict[str, Any]] = None

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -15,7 +15,7 @@ class User(BaseModel):
     uid: Optional[str] = None
     password: Optional[str] = None
     role: Optional[Role] = None
-    group: Optional[str] = None
+    group: Optional[Dict[str, Any]] = None
 
     @field_validator("role", mode="before")
     @classmethod

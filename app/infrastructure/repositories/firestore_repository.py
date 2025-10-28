@@ -77,10 +77,10 @@ class FirestoreRepository:
 
     def _resolve_group_reference(self, user_data: dict) -> None:
         """
-        Resolves a Firestore DocumentReference in the 'group' field to extract the group name.
+        Resolves a Firestore DocumentReference in the 'group' field to extract the complete group object.
 
         This helper method checks if the user_data contains a 'group' field with a DocumentReference,
-        fetches the referenced group document, and replaces the reference with just the group name.
+        fetches the referenced group document, and replaces the reference with the complete group data.
         If the reference is invalid, missing, or the group doesn't exist, sets group to None.
 
         Args:
@@ -98,15 +98,19 @@ class FirestoreRepository:
                     group_doc = group_ref.get()
                     if group_doc.exists:
                         group_data = group_doc.to_dict()
-                        # Extract only the name from the group
-                        user_data[self.USER_GROUP] = group_data.get(self.USER_NAME) if group_data else None
+                        # Include the complete group object with document ID
+                        if group_data:
+                            group_data['groupId'] = group_doc.id
+                            user_data[self.USER_GROUP] = group_data
+                        else:
+                            user_data[self.USER_GROUP] = None
                     else:
                         user_data[self.USER_GROUP] = None
                 except Exception:
                     # If fetching the group fails, set to None
                     user_data[self.USER_GROUP] = None
-            # If it's not a DocumentReference and not a string, set to None
-            elif not isinstance(group_ref, str):
+            # If it's not a DocumentReference and not a dict, set to None
+            elif not isinstance(group_ref, dict):
                 user_data[self.USER_GROUP] = None
 
     def read_user(self, uid: str) -> dict:
