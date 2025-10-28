@@ -6,7 +6,7 @@ from firebase_admin import auth
 from pydantic import BaseModel, EmailStr
 
 from core.dependencies import AuthClientDep
-from infrastructure.errors.auth_errors import UnauthorizedError
+from infrastructure.errors.auth_errors import UnauthorizedError, ForbiddenError
 from domain.entities.role import Role
 
 
@@ -64,4 +64,4 @@ def check_user_role(
 
     user_role = Role(user_token.user_role)
     if not user_role.is_authorized(min_role):
-        raise UnauthorizedError
+        raise ForbiddenError

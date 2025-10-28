@@ -14,6 +14,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
         204: {"description": "All users deleted successfully"},
         400: {"description": "Bad request - Firebase operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         500: {"description": "Internal server error"},
     },
 )
@@ -34,6 +35,7 @@ def delete_all_users(
         204: {"description": "User deleted successfully"},
         400: {"description": "Bad request - Firebase operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges or not the owner"},
         404: {"description": "Not found - User not found in Firebase Auth or Firestore"},
         500: {"description": "Internal server error"},
     },

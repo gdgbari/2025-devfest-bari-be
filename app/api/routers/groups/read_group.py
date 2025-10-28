@@ -19,6 +19,7 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
         200: {"description": "List of groups retrieved successfully"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         500: {"description": "Internal server error"},
     },
 )
@@ -41,6 +42,7 @@ def read_all_groups(
         200: {"description": "Group retrieved successfully"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         404: {"description": "Not found - Group not found in Firestore"},
         500: {"description": "Internal server error"},
     },

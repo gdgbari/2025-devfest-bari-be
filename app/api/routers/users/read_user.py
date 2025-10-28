@@ -19,6 +19,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
         200: {"description": "List of users retrieved successfully"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         500: {"description": "Internal server error"},
     },
 )
@@ -64,6 +65,7 @@ def read_current_user(
         200: {"description": "User retrieved successfully"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges or not the owner"},
         404: {"description": "Not found - User not found in Firestore"},
         500: {"description": "Internal server error"},
     },

@@ -14,6 +14,7 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
         204: {"description": "All groups deleted successfully"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         500: {"description": "Internal server error"},
     },
 )
@@ -34,6 +35,7 @@ def delete_all_groups(
         204: {"description": "Group deleted successfully"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         404: {"description": "Not found - Group not found in Firestore"},
         500: {"description": "Internal server error"},
     },

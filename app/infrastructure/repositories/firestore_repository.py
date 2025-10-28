@@ -47,8 +47,8 @@ class FirestoreRepository:
             )
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
-                raise CreateUserError(message=f"User already existing: {str(user_data.uid)}", http_status=409)
-            raise CreateUserError(message=f"Failed to create user for uid {str(user_data.uid)}: {str(exception)}", http_status=400)
+                raise CreateUserError(message=f"User already existing", http_status=409)
+            raise CreateUserError(message=f"Failed to create user", http_status=400)
 
 
     def reserve_nickname(self, nickname: str) -> None:
@@ -71,8 +71,8 @@ class FirestoreRepository:
             self.firestore_client.create_doc(self.NICKNAMES_COLLECTION, doc_id=nickname)
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
-                raise ReserveNicknameError(message=f"Nickname already existing: {str(nickname)}", http_status=409)
-            raise ReserveNicknameError(message=f"Failed to create nickname for nickname {str(nickname)}: {str(exception)}", http_status=400)
+                raise ReserveNicknameError(message=f"Nickname already existing", http_status=409)
+            raise ReserveNicknameError(message=f"Failed to create nickname", http_status=400)
 
 
     def _resolve_group_reference(self, user_data: dict) -> None:
@@ -126,10 +126,10 @@ class FirestoreRepository:
             user_data_dict = self.firestore_client.read_doc(collection_name=self.USERS_COLLECTION, doc_id=uid)
             self._resolve_group_reference(user_data_dict)
             return {self.USER_ID: uid, **user_data_dict}
-        except DocumentNotFoundError as e:
-            raise ReadUserError(message=f"Failed to read user {str(uid)}: User was not found", http_status=404)
-        except Exception as e:
-            raise ReadUserError(message=f"Failed to read user {str(uid)}: {str(e)}", http_status=400)
+        except DocumentNotFoundError:
+            raise ReadUserError(message=f"User was not found", http_status=404)
+        except Exception:
+            raise ReadUserError(message=f"Failed to read user", http_status=400)
 
 
     def read_all_users(self) -> list[dict]:
@@ -152,8 +152,8 @@ class FirestoreRepository:
             for user in users:
                 self._resolve_group_reference(user)
             return users
-        except Exception as e:
-            raise ReadUserError(message=f"Failed to read all users: {str(e)}", http_status=400)
+        except Exception:
+            raise ReadUserError(message=f"Failed to read all users", http_status=400)
 
 
     def delete_user(self, uid: str) -> None:
@@ -171,10 +171,10 @@ class FirestoreRepository:
         """
         try:
             self.firestore_client.delete_doc(collection_name=self.USERS_COLLECTION, doc_id=uid)
-        except DocumentNotFoundError as e:
-            raise DeleteUserError(message=f"Failed to delete user {str(uid)} in firestore: User was not found", http_status=404)
-        except Exception as e:
-            raise DeleteUserError(message=f"Failed to delete user {str(uid)} in firestore: {str(e)}", http_status=400)
+        except DocumentNotFoundError:
+            raise DeleteUserError(message=f"User was not found", http_status=404)
+        except Exception:
+            raise DeleteUserError(message=f"Failed to delete user", http_status=400)
 
 
     def delete_nickname(self, nickname: str) -> None:
@@ -193,9 +193,9 @@ class FirestoreRepository:
         try:
             self.firestore_client.delete_doc(collection_name=self.NICKNAMES_COLLECTION, doc_id=nickname)
         except DocumentNotFoundError as e:
-            raise DeleteUserError(message=f"Failed to delete nickname {str(nickname)} in firestore: Nickname not found", http_status=404)
-        except Exception as e:
-            raise DeleteUserError(message=f"Failed to delete nickname {str(nickname)} in firestore: {str(e)}", http_status=400)
+            raise DeleteUserError(message=f"Nickname not found", http_status=404)
+        except Exception:
+            raise DeleteUserError(message=f"Failed to delete nickname", http_status=400)
 
 
     def delete_all_users(self) -> None:
@@ -213,8 +213,8 @@ class FirestoreRepository:
         """
         try:
             self.firestore_client.delete_all_docs(self.USERS_COLLECTION)
-        except Exception as e:
-            raise DeleteUserError(message=f"Failed to delete all users in firestore: {str(e)}", http_status=400)
+        except Exception:
+            raise DeleteUserError(message=f"Failed to delete all users", http_status=400)
 
 
     def delete_all_nicknames(self) -> None:
@@ -232,8 +232,8 @@ class FirestoreRepository:
         """
         try:
             self.firestore_client.delete_all_docs(self.NICKNAMES_COLLECTION)
-        except Exception as e:
-            raise DeleteUserError(message=f"Failed to delete all nicknames in firestore: {str(e)}", http_status=400)
+        except Exception:
+            raise DeleteUserError(message=f"Failed to delete all nicknames", http_status=400)
 
 
     def update_user(self, uid: str, user_data: dict) -> None:
@@ -259,7 +259,7 @@ class FirestoreRepository:
                 update_params[self.USER_SURNAME] = user_data[self.USER_SURNAME]
 
             self.firestore_client.update_doc(self.USERS_COLLECTION, doc_id=uid, doc_data=update_params)
-        except DocumentNotFoundError as e:
-            raise UpdateUserError(message=f"Failed to update user {str(uid)}: User was not found", http_status=404)
-        except Exception as e:
-            raise UpdateUserError(message=f"Failed to update user {str(uid)}: {str(e)}", http_status=400)
+        except DocumentNotFoundError:
+            raise UpdateUserError(message=f"User was not found", http_status=404)
+        except Exception:
+            raise UpdateUserError(message=f"Failed to update user", http_status=400)

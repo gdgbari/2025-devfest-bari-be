@@ -33,8 +33,8 @@ class GroupRepository:
             return group
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
-                raise CreateGroupError(message=f"Group already exists: {group.name}", http_status=409)
-            raise CreateGroupError(message=f"Failed to create group {group.name}: {str(exception)}", http_status=400)
+                raise CreateGroupError(message=f"Group already exists", http_status=409)
+            raise CreateGroupError(message=f"Failed to create group", http_status=400)
 
     def read(self, gid: str) -> Group:
         """
@@ -44,9 +44,9 @@ class GroupRepository:
             group_data_dict = self.firestore_client.read_doc(collection_name=self.GROUP_COLLECTION, doc_id=gid)
             return Group.from_dict({self.GROUP_ID: gid, **group_data_dict})
         except DocumentNotFoundError:
-            raise ReadGroupError(message=f"Group not found: {gid}", http_status=404)
+            raise ReadGroupError(message=f"Group not found", http_status=404)
         except Exception as exception:
-            raise ReadGroupError(message=f"Failed to read group {gid}: {str(exception)}", http_status=400)
+            raise ReadGroupError(message=f"Failed to read group", http_status=400)
 
     def read_all(self) -> list[Group]:
         """
@@ -60,7 +60,7 @@ class GroupRepository:
             )
             return [Group.from_dict(group) for group in groups]
         except Exception as exception:
-            raise ReadGroupError(message=f"Failed to read all groups: {str(exception)}", http_status=400)
+            raise ReadGroupError(message=f"Failed to read all groups", http_status=400)
 
     def update(self, gid: str, group_update: dict) -> Group:
         """
@@ -84,9 +84,9 @@ class GroupRepository:
             )
             return self.read(gid)
         except DocumentNotFoundError:
-            raise UpdateGroupError(message=f"Group not found: {gid}", http_status=404)
+            raise UpdateGroupError(message=f"Group not found", http_status=404)
         except Exception as exception:
-            raise UpdateGroupError(message=f"Failed to update group {gid}: {str(exception)}", http_status=400)
+            raise UpdateGroupError(message=f"Failed to update group", http_status=400)
 
     def delete(self, gid: str) -> None:
         """
@@ -95,9 +95,9 @@ class GroupRepository:
         try:
             self.firestore_client.delete_doc(collection_name=self.GROUP_COLLECTION, doc_id=gid)
         except DocumentNotFoundError:
-            raise DeleteGroupError(message=f"Group not found: {gid}", http_status=404)
+            raise DeleteGroupError(message=f"Group not found", http_status=404)
         except Exception as exception:
-            raise DeleteGroupError(message=f"Failed to delete group {gid}: {str(exception)}", http_status=400)
+            raise DeleteGroupError(message=f"Failed to delete group", http_status=400)
 
     def delete_all(self) -> None:
         """
@@ -106,5 +106,5 @@ class GroupRepository:
         try:
             self.firestore_client.delete_all_docs(self.GROUP_COLLECTION)
         except Exception as exception:
-            raise DeleteGroupError(message=f"Failed to delete all groups: {str(exception)}", http_status=400)
+            raise DeleteGroupError(message=f"Failed to delete all groups", http_status=400)
 

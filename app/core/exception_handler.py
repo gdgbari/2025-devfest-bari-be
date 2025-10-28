@@ -12,7 +12,7 @@ def register_exception_handlers(app: FastAPI):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     @app.exception_handler(CreateUserError)
-    async def create_user_error_handler(request: Request, exc: ReserveNicknameError):
+    async def create_user_error_handler(request: Request, exc: CreateUserError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     @app.exception_handler(AuthenticateUserError)
@@ -46,6 +46,13 @@ def register_exception_handlers(app: FastAPI):
             detail="Not Authorized",
         )
 
+    @app.exception_handler(ForbiddenError)
+    async def forbidden_error_handler(request: Request, exc: ForbiddenError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient Permissions",
+        )
+
     @app.exception_handler(CreateGroupError)
     async def create_group_error_handler(request: Request, exc: CreateGroupError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
@@ -64,4 +71,4 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Internal server error")

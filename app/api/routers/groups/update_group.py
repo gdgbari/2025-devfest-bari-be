@@ -19,6 +19,7 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
         200: {"description": "Group updated successfully"},
         400: {"description": "Bad request - Invalid data or Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
+        403: {"description": "Forbidden - Insufficient privileges"},
         404: {"description": "Not found - Group not found in Firestore"},
         500: {"description": "Internal server error"},
     },
