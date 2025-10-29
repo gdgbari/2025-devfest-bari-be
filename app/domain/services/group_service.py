@@ -52,12 +52,6 @@ class GroupService:
         """
         self.group_repository.delete_all()
 
-    def increment_user_count(self, gid: str) -> None:
-        """
-        Increments the user count for a group.
-        """
-        self.group_repository.increment_user_count(gid)
-
     def decrement_user_count(self, gid: str) -> None:
         """
         Decrements the user count for a group.
@@ -70,21 +64,9 @@ class GroupService:
         """
         self.group_repository.reset_all_user_counts()
 
-    def find_group_with_least_users(self) -> Group:
+    def increment_group_counter(self) -> str:
         """
-        Finds the group with the least number of users for partially round-robin assignment.
-        If the groups have the same amount of users, the group is selected random
+        Increment group counter of the group with least users
         """
-        groups = self.read_all_groups()
-        if not groups:
-            raise Exception("No groups available for assignment")
-
-        # Find minimum user count
-        min_count = min(g.user_count if g.user_count is not None else 0 for g in groups)
-
-        # Filter groups with minimum
-        min_groups = [g for g in groups if (g.user_count if g.user_count is not None else 0) == min_count]
-
-        # Random choice between them
-        return random.choice(min_groups)
+        return self.group_repository.increment_group_counter()
 

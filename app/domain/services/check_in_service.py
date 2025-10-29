@@ -33,13 +33,10 @@ class CheckInService:
         if not self.config_service.is_check_in_open():
             raise CheckInNotOpenError()
 
-        # Find group to be assigned
-        selected_group = self.group_service.find_group_with_least_users()
+        # Atomically find group and increment counter to prevent race conditions
+        selected_gid = self.group_service.increment_group_counter()
 
-        # Assign the group
-        updated_user = self.user_service.assign_group_to_user(uid, selected_group.gid)
-
-        # Raise up the counter for the group selected
-        self.group_service.increment_user_count(selected_group.gid)
+        # Assign the group to the user and update custom claims
+        updated_user = self.user_service.assign_group_to_user(uid, selected_gid)
 
         return updated_user

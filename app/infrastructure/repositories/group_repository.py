@@ -1,4 +1,6 @@
+import random
 from firebase_admin import firestore
+from google.cloud.firestore import Transaction
 
 from domain.entities.group import Group
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
@@ -111,17 +113,6 @@ class GroupRepository:
         except Exception:
             raise DeleteGroupError(message=f"Failed to delete all groups", http_status=400)
 
-
-    def increment_user_count(self, gid: str) -> None:
-        """
-        Increments the user_count field for a group.
-        """
-        try:
-            group_doc = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(gid)
-            group_doc.update({self.GROUP_USER_COUNT: firestore.Increment(1)})
-        except Exception:
-            raise UpdateGroupError(message=f"Failed to increment user count", http_status=400)
-
     def decrement_user_count(self, gid: str) -> None:
         """
         Decrements the user_count field for a group.
@@ -143,3 +134,50 @@ class GroupRepository:
                 group_doc.update({self.GROUP_USER_COUNT: 0})
         except Exception:
             raise UpdateGroupError(message=f"Failed to reset all user counts", http_status=400)
+
+
+    def increment_group_counter(self) -> str:
+        groups_ref = self.firestore_client.db.collection(self.GROUP_COLLECTION)
+
+        @firestore.transactional
+        def update_in_transaction(transaction):
+            groups_data = []
+
+            for doc in groups_ref.stream():
+                if doc.exists:
+                    data = doc.to_dict()
+                    data['gid'] = doc.id
+                    groups_data.append(data)
+
+            if not groups_data:
+                raise ReadGroupError(message="No groups available", http_status=400)
+
+            # Find the minimum userCount among all groups
+            min_count = min(g.get(self.GROUP_USER_COUNT, 0) or 0 for g in groups_data)
+
+            # Get all groups that have this minimum count
+            min_groups = [g for g in groups_data if (g.get(self.GROUP_USER_COUNT, 0) or 0) == min_count]
+
+            # If multiple groups have same count, pick one randomly for better distribution
+            selected_group = random.choice(min_groups)
+            selected_gid = selected_group['gid']
+
+            # Increment the counter of the selected group atomically
+            group_doc_ref = groups_ref.document(selected_gid)
+
+            # Read current value from the data we already have
+            current_count = selected_group.get(self.GROUP_USER_COUNT, 0) or 0
+
+            # Update with the new value using transaction
+            transaction.update(group_doc_ref, {
+                self.GROUP_USER_COUNT: current_count + 1
+            })
+
+            return selected_gid
+
+        try:
+            # Execute the transaction
+            transaction = self.firestore_client.db.transaction()
+            return update_in_transaction(transaction)
+        except Exception as e:
+            raise UpdateGroupError(message=f"Failed to select and increment group: {str(e)}", http_status=400)
