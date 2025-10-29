@@ -12,6 +12,7 @@ class FirestoreRepository:
     # Collection names
     USERS_COLLECTION: str = "users"
     NICKNAMES_COLLECTION: str = "nicknames"
+    GROUP_COLLECTION: str = "groups"
 
     # User field names
     USER_ID: str = "uid"
@@ -267,3 +268,21 @@ class FirestoreRepository:
             raise UpdateUserError(message=f"User was not found", http_status=404)
         except Exception:
             raise UpdateUserError(message=f"Failed to update user", http_status=400)
+
+
+    def assign_group_to_user(self, uid: str, gid: str) -> None:
+        """
+        Assigns a group to a user by storing a DocumentReference.
+        """
+        try:
+            group_ref = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(gid)
+
+            self.firestore_client.update_doc(
+                self.USERS_COLLECTION,
+                doc_id=uid,
+                doc_data={self.USER_GROUP: group_ref}
+            )
+        except DocumentNotFoundError:
+            raise UpdateUserError(message=f"User not found", http_status=404)
+        except Exception as e:
+            raise UpdateUserError(message=f"Failed to assign group", http_status=400)

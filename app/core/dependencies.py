@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from domain.services.check_in_service import CheckInService
 from domain.services.group_service import GroupService
 from domain.services.user_service import UserService
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
@@ -85,3 +86,13 @@ def get_group_service(
     return GroupService(group_repository)
 
 GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]
+
+
+def get_check_in_service(
+    group_service: GroupServiceDep,
+    user_service: UserServiceDep
+) -> CheckInService:
+    """Dependency to get CheckInService with injected services"""
+    return CheckInService(user_service=user_service, group_service=group_service)
+
+CheckInServiceDep = Annotated[CheckInService, Depends(get_check_in_service)]

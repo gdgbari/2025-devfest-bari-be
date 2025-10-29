@@ -56,3 +56,10 @@ class UserService:
         Deletes all users from database.
         """
         self.user_repository.delete_all()
+
+
+    def assign_group_to_user(self, uid: str, gid: str) -> User:
+        """
+        Assigns a specific group to a user.
+        """
+        return self.user_repository.assign_group(uid, gid)

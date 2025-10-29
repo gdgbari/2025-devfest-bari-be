@@ -16,6 +16,7 @@ class UserToken(BaseModel):
     """
     user_id: str
     user_role: str
+    checked_in: bool
     sub: str
     uid: str
     email: EmailStr
@@ -42,7 +43,7 @@ def verify_id_token(
 
     token = creds.credentials
     try:
-        decoded_token = auth.verify_id_token(token)
+        decoded_token = auth.verify_id_token(token, check_revoked=True)
         user_token = UserToken.model_validate(decoded_token)
         auth.get_user(user_token.uid)
         return user_token
@@ -64,4 +65,16 @@ def check_user_role(
 
     user_role = Role(user_token.user_role)
     if not user_role.is_authorized(min_role):
+        raise ForbiddenError
+
+
+def check_user_checked_in(
+    user_token: UserToken,
+    is_checked_in: bool = True
+):
+    """"
+    Check if the user has already performed the check-in,
+    requiring a check-in already performed or not.
+    """
+    if is_checked_in != user_token.checked_in:
         raise ForbiddenError

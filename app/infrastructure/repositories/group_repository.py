@@ -1,3 +1,5 @@
+from firebase_admin import firestore
+
 from domain.entities.group import Group
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
 from infrastructure.errors.group_errors import *
@@ -14,6 +16,7 @@ class GroupRepository:
     GROUP_NAME: str = "name"
     GROUP_COLOR: str = "color"
     GROUP_IMAGE_URL: str = "image_url"
+    GROUP_USER_COUNT: str = "userCount"
 
     def __init__(
         self,
@@ -108,3 +111,13 @@ class GroupRepository:
         except Exception as exception:
             raise DeleteGroupError(message=f"Failed to delete all groups", http_status=400)
 
+
+    def increment_user_count(self, gid: str) -> None:
+        """
+        Increments the user_count field for a group.
+        """
+        try:
+            group_doc = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(gid)
+            group_doc.update({self.GROUP_USER_COUNT: firestore.Increment(1)})
+        except Exception:
+            raise UpdateGroupError(message=f"Failed to increment user count", http_status=400)

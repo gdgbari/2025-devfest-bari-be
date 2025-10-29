@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from firebase_admin.auth import EmailAlreadyExistsError
 
 from domain.entities.user import User
@@ -99,3 +101,14 @@ class FirebaseAuthRepository:
             self.auth_client.delete_all_users()
         except Exception as e:
             raise DeleteUserAuthError(message=f"Failed to delete all users", http_status=400)
+
+
+    def set_custom_claims(self, uid: str, claims: Dict[str, Any]) -> None:
+        """"
+        Set custom claims for a user
+        """
+        try:
+            self.auth_client.set_custom_claims(uid, claims)
+            self.auth_client.refresh_token(uid)
+        except Exception as e:
+            raise UpdateUserAuthError(message=f"Failed to set custom claims", http_status=400)

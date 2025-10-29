@@ -106,3 +106,15 @@ class UserRepository:
             group=current_user.group
         )
 
+
+    def assign_group(self, uid: str, gid: str) -> User:
+        """
+        Assigns a group to a user.
+        """
+        self.firestore_repository.assign_group_to_user(uid, gid)
+        self.auth_repository.set_custom_claims(uid=uid, claims={
+                "user_role": "attendee",
+                "checked_in": True
+                })
+
+        return self.read(uid)
