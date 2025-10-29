@@ -4,12 +4,14 @@ from typing import Annotated
 from fastapi import Depends
 
 from domain.services.check_in_service import CheckInService
+from domain.services.config_service import ConfigService
 from domain.services.group_service import GroupService
 from domain.services.user_service import UserService
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
 from infrastructure.clients.firestore_client import FirestoreClient
 from infrastructure.repositories.firebase_auth_repository import \
     FirebaseAuthRepository
+from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.firestore_repository import \
     FirestoreRepository
 from infrastructure.repositories.group_repository import GroupRepository
@@ -88,11 +90,30 @@ def get_group_service(
 GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]
 
 
+def get_config_repository(
+    firestore_client: FirestoreClientDep
+) -> ConfigRepository:
+    """Dependency to get ConfigRepository instance"""
+    return ConfigRepository(firestore_client)
+
+ConfigRepositoryDep = Annotated[ConfigRepository, Depends(get_config_repository)]
+
+
+def get_config_service(
+    config_repository: ConfigRepositoryDep
+) -> ConfigService:
+    """Dependency to get ConfigService with injected repository"""
+    return ConfigService(config_repository)
+
+ConfigServiceDep = Annotated[ConfigService, Depends(get_config_service)]
+
+
 def get_check_in_service(
     group_service: GroupServiceDep,
-    user_service: UserServiceDep
+    user_service: UserServiceDep,
+    config_service: ConfigServiceDep
 ) -> CheckInService:
     """Dependency to get CheckInService with injected services"""
-    return CheckInService(user_service=user_service, group_service=group_service)
+    return CheckInService(user_service=user_service, group_service=group_service, config_service=config_service)
 
 CheckInServiceDep = Annotated[CheckInService, Depends(get_check_in_service)]

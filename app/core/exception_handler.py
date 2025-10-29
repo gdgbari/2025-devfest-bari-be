@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Request, status
 from infrastructure.errors.user_errors import *
 from infrastructure.errors.auth_errors import *
 from infrastructure.errors.group_errors import *
+from infrastructure.errors.config_errors import *
 
 def register_exception_handlers(app: FastAPI):
     """Register all global exception handlers"""
@@ -67,6 +68,14 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(DeleteGroupError)
     async def delete_group_error_handler(request: Request, exc: DeleteGroupError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(ReadConfigError)
+    async def read_config_error_handler(request: Request, exc: ReadConfigError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(CheckInNotOpenError)
+    async def check_in_not_open_error_handler(request: Request, exc: CheckInNotOpenError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     @app.exception_handler(Exception)

@@ -18,7 +18,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
         200: {"description": "Group assigned successfully"},
         400: {"description": "Bad request - No groups available or assignment failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
-        403: {"description": "Insufficient Permission - User have a not allowed group assignment"},
+        403: {"description": "Forbidden - Check-in is closed or user has insufficient permissions"},
         404: {"description": "Not found - User not found"},
         500: {"description": "Internal server error"},
     },
