@@ -1,5 +1,6 @@
 from domain.entities.user import User
 from infrastructure.repositories.user_repository import UserRepository
+from domain.services.group_service import GroupService
 
 class UserService:
     """"
@@ -9,9 +10,11 @@ class UserService:
 
     def __init__(
         self,
-        user_repository: UserRepository
+        user_repository: UserRepository,
+        group_service: GroupService
     ):
         self.user_repository = user_repository
+        self.group_service = group_service
 
 
     def create_user(self, user: User) -> User:
@@ -48,6 +51,13 @@ class UserService:
         Deletes a user from the database.
         """
         user = self.read_user(uid)
+
+        # Decrement group counter if user has a group assigned
+        if user.group:
+            group_id = user.group.get("gid")
+            if group_id:
+                self.group_service.decrement_user_count(group_id)
+
         self.user_repository.delete(uid, user.nickname)
 
 
@@ -56,6 +66,9 @@ class UserService:
         Deletes all users from database.
         """
         self.user_repository.delete_all()
+
+        # Reset all group counters
+        self.group_service.reset_all_user_counts()
 
 
     def assign_group_to_user(self, uid: str, gid: str) -> User:

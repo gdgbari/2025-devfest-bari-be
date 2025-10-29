@@ -63,15 +63,6 @@ def get_user_repository(
 
 UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
 
-def get_user_service(
-    user_repository: UserRepositoryDep
-) -> UserService:
-    """Dependency to get UserService with injected repositories"""
-    return UserService(user_repository)
-
-UserServiceDep = Annotated[UserService, Depends(get_user_service)]
-
-
 def get_group_repository(
     firestore_client: FirestoreClientDep
 ) -> GroupRepository:
@@ -88,6 +79,16 @@ def get_group_service(
     return GroupService(group_repository)
 
 GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]
+
+
+def get_user_service(
+    user_repository: UserRepositoryDep,
+    group_service: GroupServiceDep
+) -> UserService:
+    """Dependency to get UserService with injected repositories"""
+    return UserService(user_repository, group_service)
+
+UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 
 
 def get_config_repository(

@@ -101,7 +101,7 @@ class FirestoreRepository:
                         group_data = group_doc.to_dict()
                         # Include the complete group object with document ID
                         if group_data:
-                            group_data['groupId'] = group_doc.id
+                            group_data['gid'] = group_doc.id
                             user_data[self.USER_GROUP] = group_data
                         else:
                             user_data[self.USER_GROUP] = None

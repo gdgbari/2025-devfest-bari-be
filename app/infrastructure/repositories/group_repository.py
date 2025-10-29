@@ -99,7 +99,7 @@ class GroupRepository:
             self.firestore_client.delete_doc(collection_name=self.GROUP_COLLECTION, doc_id=gid)
         except DocumentNotFoundError:
             raise DeleteGroupError(message=f"Group not found", http_status=404)
-        except Exception as exception:
+        except Exception:
             raise DeleteGroupError(message=f"Failed to delete group", http_status=400)
 
     def delete_all(self) -> None:
@@ -108,7 +108,7 @@ class GroupRepository:
         """
         try:
             self.firestore_client.delete_all_docs(self.GROUP_COLLECTION)
-        except Exception as exception:
+        except Exception:
             raise DeleteGroupError(message=f"Failed to delete all groups", http_status=400)
 
 
@@ -121,3 +121,25 @@ class GroupRepository:
             group_doc.update({self.GROUP_USER_COUNT: firestore.Increment(1)})
         except Exception:
             raise UpdateGroupError(message=f"Failed to increment user count", http_status=400)
+
+    def decrement_user_count(self, gid: str) -> None:
+        """
+        Decrements the user_count field for a group.
+        """
+        try:
+            group_doc = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(gid)
+            group_doc.update({self.GROUP_USER_COUNT: firestore.Increment(-1)})
+        except Exception:
+            raise UpdateGroupError(message=f"Failed to decrement user count", http_status=400)
+
+    def reset_all_user_counts(self) -> None:
+        """
+        Resets the user_count field to 0 for all groups.
+        """
+        try:
+            groups = self.read_all()
+            for group in groups:
+                group_doc = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(group.gid)
+                group_doc.update({self.GROUP_USER_COUNT: 0})
+        except Exception:
+            raise UpdateGroupError(message=f"Failed to reset all user counts", http_status=400)
