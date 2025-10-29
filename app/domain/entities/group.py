@@ -11,7 +11,7 @@ class Group(BaseModel):
     name: str
     color: str
     image_url: str
-    user_count: Optional[int] = None
+    user_count: int = None
     gid: Optional[str] = None
 
     @staticmethod
@@ -20,7 +20,7 @@ class Group(BaseModel):
             name=data["name"],
             color=data["color"],
             image_url=data["imageUrl"],
-            user_count=data["userCount"] if " userCount" in data else None,
+            user_count=data["userCount"],
             gid=data["gid"] if "gid" in data else None,
         )
 
