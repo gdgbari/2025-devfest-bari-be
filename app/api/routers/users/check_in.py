@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
-from api.adapters.checkin.check_in_adapter import CheckInAdapter
-from api.schemas.checkin.check_in_schema import CheckInResponse
+from api.adapters.users.check_in_adapter import CheckInAdapter
+from api.schemas.users.check_in_schema import CheckInResponse
 from core.authorization import verify_id_token, check_user_checked_in
 from core.dependencies import CheckInServiceDep
 from domain.entities.user import User
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.post(
-    "/me/check-in",
+    "/check-in",
     description="Assign a group to the current authenticated user using round-robin",
     response_model=CheckInResponse,
     status_code=status.HTTP_200_OK,

@@ -61,16 +61,6 @@ class UserService:
         self.user_repository.delete(uid, user.nickname)
 
 
-    def delete_all_users(self) -> None:
-        """
-        Deletes all users from database.
-        """
-        self.user_repository.delete_all()
-
-        # Reset all group counters
-        self.group_service.reset_all_user_counts()
-
-
     def assign_group_to_user(self, uid: str, gid: str) -> User:
         """
         Assigns a specific group to a user.

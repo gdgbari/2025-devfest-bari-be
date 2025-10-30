@@ -84,25 +84,6 @@ class FirebaseAuthRepository:
             raise DeleteUserAuthError(message=f"Failed to delete user", http_status=400)
 
 
-    def delete_all(self):
-        """
-        Deletes all user accounts from Firebase Authentication.
-
-        This method performs a batch deletion of all user authentication accounts from Firebase Auth.
-        WARNING: This is a destructive operation that cannot be undone. All user credentials, tokens,
-        and authentication records will be permanently removed. This should only be used for testing,
-        data cleanup, or administrative purposes. This does NOT remove user profile data from Firestore.
-
-        Raises:
-            DeleteUserAuthError: If batch deletion fails. Specific scenarios:
-                - HTTP 400: Firebase Auth operation errors or permission issues
-        """
-        try:
-            self.auth_client.delete_all_users()
-        except Exception as e:
-            raise DeleteUserAuthError(message=f"Failed to delete all users", http_status=400)
-
-
     def set_custom_claims(self, uid: str, claims: Dict[str, Any]) -> None:
         """"
         Set custom claims for a user

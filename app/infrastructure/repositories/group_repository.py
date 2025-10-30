@@ -123,19 +123,6 @@ class GroupRepository:
         except Exception:
             raise UpdateGroupError(message=f"Failed to decrement user count", http_status=400)
 
-    def reset_all_user_counts(self) -> None:
-        """
-        Resets the user_count field to 0 for all groups.
-        """
-        try:
-            groups = self.read_all()
-            for group in groups:
-                group_doc = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(group.gid)
-                group_doc.update({self.GROUP_USER_COUNT: 0})
-        except Exception:
-            raise UpdateGroupError(message=f"Failed to reset all user counts", http_status=400)
-
-
     def increment_group_counter(self) -> str:
         groups_ref = self.firestore_client.db.collection(self.GROUP_COLLECTION)
 
@@ -150,7 +137,7 @@ class GroupRepository:
                     groups_data.append(data)
 
             if not groups_data:
-                raise ReadGroupError(message="No groups available", http_status=400)
+                raise ReadGroupError(message="No groups available", http_status=404)
 
             # Find the minimum userCount among all groups
             min_count = min(g.get(self.GROUP_USER_COUNT, 0) or 0 for g in groups_data)
@@ -179,5 +166,5 @@ class GroupRepository:
             # Execute the transaction
             transaction = self.firestore_client.db.transaction()
             return update_in_transaction(transaction)
-        except Exception as e:
-            raise UpdateGroupError(message=f"Failed to select and increment group: {str(e)}", http_status=400)
+        except Exception:
+            raise UpdateGroupError(message=f"Failed to select group", http_status=400)

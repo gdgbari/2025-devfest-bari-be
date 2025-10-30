@@ -1,4 +1,4 @@
-from api.schemas.checkin.check_in_schema import CheckInResponse
+from api.schemas.users.check_in_schema import CheckInResponse
 from domain.entities.user import User
 
 class CheckInAdapter:
@@ -9,6 +9,5 @@ class CheckInAdapter:
     @staticmethod
     def to_response(user: User) -> CheckInResponse:
         return CheckInResponse(
-            uid=user.uid,
             group=user.group,
         )

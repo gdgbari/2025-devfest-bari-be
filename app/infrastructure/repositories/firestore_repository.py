@@ -203,44 +203,6 @@ class FirestoreRepository:
             raise DeleteUserError(message=f"Failed to delete nickname", http_status=400)
 
 
-    def delete_all_users(self) -> None:
-        """
-        Deletes all user documents from the Firestore 'users' collection.
-
-        This method performs a batch deletion of all user profile data from Firestore.
-        WARNING: This is a destructive operation that cannot be undone. It should only be
-        used for testing, data cleanup, or administrative purposes. This does NOT delete
-        users from Firebase Authentication.
-
-        Raises:
-            DeleteUserError: If batch deletion fails. Specific scenarios:
-                - HTTP 400: Firestore operation errors or collection access issues
-        """
-        try:
-            self.firestore_client.delete_all_docs(self.USERS_COLLECTION)
-        except Exception:
-            raise DeleteUserError(message=f"Failed to delete all users", http_status=400)
-
-
-    def delete_all_nicknames(self) -> None:
-        """
-        Deletes all nickname reservation documents from the Firestore 'nicknames' collection.
-
-        This method performs a batch deletion of all nickname reservations from Firestore,
-        making all nicknames available for future use. WARNING: This is a destructive operation
-        that cannot be undone. It should only be used for testing, data cleanup, or
-        administrative purposes.
-
-        Raises:
-            DeleteUserError: If batch deletion fails. Specific scenarios:
-                - HTTP 400: Firestore operation errors or collection access issues
-        """
-        try:
-            self.firestore_client.delete_all_docs(self.NICKNAMES_COLLECTION)
-        except Exception:
-            raise DeleteUserError(message=f"Failed to delete all nicknames", http_status=400)
-
-
     def update_user(self, uid: str, user_data: dict) -> None:
         """
         Updates an existing user document in the Firestore 'users' collection.

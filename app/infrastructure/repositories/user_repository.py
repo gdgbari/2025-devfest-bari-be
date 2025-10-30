@@ -58,16 +58,6 @@ class UserRepository:
         self.firestore_repository.delete_user(uid)
 
 
-    def delete_all(self) -> None:
-        """
-        Deletes all users from Firebase Auth, then from Firestore.
-        Returns None.
-        """
-        self.firestore_repository.delete_all_nicknames()
-        self.auth_repository.delete_all()
-        self.firestore_repository.delete_all_users()
-
-
     def read(self, uid: str) -> User:
         """
         Reads a user from Firestore and returns it as a response schema.

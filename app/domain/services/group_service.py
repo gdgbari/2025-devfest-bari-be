@@ -58,12 +58,6 @@ class GroupService:
         """
         self.group_repository.decrement_user_count(gid)
 
-    def reset_all_user_counts(self) -> None:
-        """
-        Resets the user count to 0 for all groups.
-        """
-        self.group_repository.reset_all_user_counts()
-
     def increment_group_counter(self) -> str:
         """
         Increment group counter of the group with least users
