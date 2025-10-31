@@ -1,9 +1,8 @@
-from fastapi import APIRouter, FastAPI
-
 from api.routers.groups import router as groups_router
 from api.routers.health.health import router as health_router
-from api.routers.quiz import router as quiz_router
+from api.routers.quizzes import router as quiz_router
 from api.routers.users import router as users_router
+from fastapi import APIRouter, FastAPI
 
 api_router = APIRouter(prefix="/api")
 

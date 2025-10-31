@@ -1,13 +1,12 @@
 from typing import Optional
 
+from core.dependencies import AuthClientDep
+from domain.entities.role import Role
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
+from infrastructure.errors.auth_errors import ForbiddenError, UnauthorizedError
 from pydantic import BaseModel, EmailStr
-
-from core.dependencies import AuthClientDep
-from infrastructure.errors.auth_errors import UnauthorizedError, ForbiddenError
-from domain.entities.role import Role
 
 
 class UserToken(BaseModel):

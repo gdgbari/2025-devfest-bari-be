@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
-from api.adapters.quiz.create_quiz_adapter import CreateQuizAdapter
-from api.schemas.quiz.create_quiz_schema import CreateQuizRequest, CreateQuizResponse
+from api.adapters.quizzes.create_quiz_adapter import CreateQuizAdapter
+from api.schemas.quizzes.create_quiz_schema import CreateQuizRequest, CreateQuizResponse
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import QuizServiceDep
 from domain.entities.quiz import Quiz

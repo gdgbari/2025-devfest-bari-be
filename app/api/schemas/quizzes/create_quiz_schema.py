@@ -1,5 +1,5 @@
 from pydantic import Field
-from api.schemas.quiz.base_schema import QuizBaseSchema
+from api.schemas.quizzes.base_schema import QuizBaseSchema
 
 
 class CreateQuizRequest(QuizBaseSchema):

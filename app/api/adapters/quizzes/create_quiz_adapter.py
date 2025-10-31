@@ -1,5 +1,5 @@
-from api.schemas.quiz.create_quiz_schema import CreateQuizRequest, CreateQuizResponse
-from api.schemas.quiz.base_schema import QuestionSchema, AnswerSchema
+from api.schemas.quizzes.create_quiz_schema import CreateQuizRequest, CreateQuizResponse
+from api.schemas.quizzes.base_schema import QuestionSchema, AnswerSchema
 from domain.entities.quiz import Quiz
 from domain.entities.question import Question
 from domain.entities.answer import Answer
