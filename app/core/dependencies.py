@@ -6,6 +6,7 @@ from fastapi import Depends
 from domain.services.check_in_service import CheckInService
 from domain.services.config_service import ConfigService
 from domain.services.group_service import GroupService
+from domain.services.quiz_service import QuizService
 from domain.services.user_service import UserService
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
 from infrastructure.clients.firestore_client import FirestoreClient
@@ -15,6 +16,7 @@ from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.firestore_repository import \
     FirestoreRepository
 from infrastructure.repositories.group_repository import GroupRepository
+from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
 
 
@@ -118,3 +120,21 @@ def get_check_in_service(
     return CheckInService(user_service=user_service, group_service=group_service, config_service=config_service)
 
 CheckInServiceDep = Annotated[CheckInService, Depends(get_check_in_service)]
+
+
+def get_quiz_repository(
+    firestore_client: FirestoreClientDep
+) -> QuizRepository:
+    """Dependency to get QuizRepository instance"""
+    return QuizRepository(firestore_client)
+
+QuizRepositoryDep = Annotated[QuizRepository, Depends(get_quiz_repository)]
+
+
+def get_quiz_service(
+    quiz_repository: QuizRepositoryDep
+) -> QuizService:
+    """Dependency to get QuizService with injected repository"""
+    return QuizService(quiz_repository)
+
+QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
