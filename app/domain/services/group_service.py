@@ -1,3 +1,5 @@
+import random
+
 from domain.entities.group import Group
 from infrastructure.repositories.group_repository import GroupRepository
 
@@ -49,4 +51,16 @@ class GroupService:
         Deletes all groups from database.
         """
         self.group_repository.delete_all()
+
+    def decrement_user_count(self, gid: str) -> None:
+        """
+        Decrements the user count for a group.
+        """
+        self.group_repository.decrement_user_count(gid)
+
+    def increment_group_counter(self) -> str:
+        """
+        Increment group counter of the group with least users
+        """
+        return self.group_repository.increment_group_counter()
 

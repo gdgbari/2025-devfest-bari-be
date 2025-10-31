@@ -58,16 +58,6 @@ class UserRepository:
         self.firestore_repository.delete_user(uid)
 
 
-    def delete_all(self) -> None:
-        """
-        Deletes all users from Firebase Auth, then from Firestore.
-        Returns None.
-        """
-        self.firestore_repository.delete_all_nicknames()
-        self.auth_repository.delete_all()
-        self.firestore_repository.delete_all_users()
-
-
     def read(self, uid: str) -> User:
         """
         Reads a user from Firestore and returns it as a response schema.
@@ -106,3 +96,15 @@ class UserRepository:
             group=current_user.group
         )
 
+
+    def assign_group(self, uid: str, gid: str) -> User:
+        """
+        Assigns a group to a user.
+        """
+        self.firestore_repository.assign_group_to_user(uid, gid)
+        self.auth_repository.set_custom_claims(uid=uid, claims={
+                "user_role": "attendee",
+                "checked_in": True
+                })
+
+        return self.read(uid)

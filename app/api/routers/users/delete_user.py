@@ -7,27 +7,6 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.delete(
-    "",
-    description="Delete all users from Firebase Auth and Firestore (use with caution!)",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses={
-        204: {"description": "All users deleted successfully"},
-        400: {"description": "Bad request - Firebase operation failed"},
-        401: {"description": "Unauthorized - Invalid or expired token"},
-        403: {"description": "Forbidden - Insufficient privileges"},
-        500: {"description": "Internal server error"},
-    },
-)
-def delete_all_users(
-    user_service: UserServiceDep,
-    user_token=Depends(verify_id_token),
-) -> None:
-
-    check_user_role(user_token)
-    user_service.delete_all_users()
-
-
-@router.delete(
     "/{uid}",
     description="Delete user from Firebase Auth and Firestore",
     status_code=status.HTTP_204_NO_CONTENT,

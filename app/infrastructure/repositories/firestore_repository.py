@@ -12,6 +12,7 @@ class FirestoreRepository:
     # Collection names
     USERS_COLLECTION: str = "users"
     NICKNAMES_COLLECTION: str = "nicknames"
+    GROUP_COLLECTION: str = "groups"
 
     # User field names
     USER_ID: str = "uid"
@@ -100,7 +101,7 @@ class FirestoreRepository:
                         group_data = group_doc.to_dict()
                         # Include the complete group object with document ID
                         if group_data:
-                            group_data['groupId'] = group_doc.id
+                            group_data['gid'] = group_doc.id
                             user_data[self.USER_GROUP] = group_data
                         else:
                             user_data[self.USER_GROUP] = None
@@ -202,44 +203,6 @@ class FirestoreRepository:
             raise DeleteUserError(message=f"Failed to delete nickname", http_status=400)
 
 
-    def delete_all_users(self) -> None:
-        """
-        Deletes all user documents from the Firestore 'users' collection.
-
-        This method performs a batch deletion of all user profile data from Firestore.
-        WARNING: This is a destructive operation that cannot be undone. It should only be
-        used for testing, data cleanup, or administrative purposes. This does NOT delete
-        users from Firebase Authentication.
-
-        Raises:
-            DeleteUserError: If batch deletion fails. Specific scenarios:
-                - HTTP 400: Firestore operation errors or collection access issues
-        """
-        try:
-            self.firestore_client.delete_all_docs(self.USERS_COLLECTION)
-        except Exception:
-            raise DeleteUserError(message=f"Failed to delete all users", http_status=400)
-
-
-    def delete_all_nicknames(self) -> None:
-        """
-        Deletes all nickname reservation documents from the Firestore 'nicknames' collection.
-
-        This method performs a batch deletion of all nickname reservations from Firestore,
-        making all nicknames available for future use. WARNING: This is a destructive operation
-        that cannot be undone. It should only be used for testing, data cleanup, or
-        administrative purposes.
-
-        Raises:
-            DeleteUserError: If batch deletion fails. Specific scenarios:
-                - HTTP 400: Firestore operation errors or collection access issues
-        """
-        try:
-            self.firestore_client.delete_all_docs(self.NICKNAMES_COLLECTION)
-        except Exception:
-            raise DeleteUserError(message=f"Failed to delete all nicknames", http_status=400)
-
-
     def update_user(self, uid: str, user_data: dict) -> None:
         """
         Updates an existing user document in the Firestore 'users' collection.
@@ -267,3 +230,21 @@ class FirestoreRepository:
             raise UpdateUserError(message=f"User was not found", http_status=404)
         except Exception:
             raise UpdateUserError(message=f"Failed to update user", http_status=400)
+
+
+    def assign_group_to_user(self, uid: str, gid: str) -> None:
+        """
+        Assigns a group to a user by storing a DocumentReference.
+        """
+        try:
+            group_ref = self.firestore_client.db.collection(self.GROUP_COLLECTION).document(gid)
+
+            self.firestore_client.update_doc(
+                self.USERS_COLLECTION,
+                doc_id=uid,
+                doc_data={self.USER_GROUP: group_ref}
+            )
+        except DocumentNotFoundError:
+            raise UpdateUserError(message=f"User not found", http_status=404)
+        except Exception as e:
+            raise UpdateUserError(message=f"Failed to assign group", http_status=400)

@@ -46,10 +46,10 @@ class FirebaseAuthClient:
         user_record: UserRecord = auth.create_user(
             email=email, password=password, display_name=display_name
         )
-        auth.set_custom_user_claims(
-            uid=user_record.uid,
-            custom_claims={"user_role": "attendee"},
-        )
+        self.set_custom_claims(user_record.uid, {
+                "user_role": "attendee",
+                "checked_in": False
+                })
         return user_record.uid
 
 
@@ -134,3 +134,14 @@ class FirebaseAuthClient:
             for user in page.users:
                 auth.delete_user(user.uid)
             page = page.get_next_page()
+
+
+    def set_custom_claims(self, uid: str, claims: Dict[str, Any]) -> None:
+        """"
+        Set customer claims for a jwt token
+        """
+        auth.set_custom_user_claims(uid=uid, custom_claims=claims)
+
+
+    def refresh_token(self, uid: str) -> None:
+        auth.revoke_refresh_tokens(uid=uid)
