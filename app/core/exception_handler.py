@@ -4,6 +4,7 @@ from infrastructure.errors.user_errors import *
 from infrastructure.errors.auth_errors import *
 from infrastructure.errors.group_errors import *
 from infrastructure.errors.config_errors import *
+from infrastructure.errors.quiz_errors import *
 
 def register_exception_handlers(app: FastAPI):
     """Register all global exception handlers"""
@@ -76,6 +77,22 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(CheckInNotOpenError)
     async def check_in_not_open_error_handler(request: Request, exc: CheckInNotOpenError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(CreateQuizError)
+    async def create_quiz_error_handler(request: Request, exc: CreateQuizError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(ReadQuizError)
+    async def read_quiz_error_handler(request: Request, exc: ReadQuizError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(UpdateQuizError)
+    async def update_quiz_error_handler(request: Request, exc: UpdateQuizError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(DeleteQuizError)
+    async def delete_quiz_error_handler(request: Request, exc: DeleteQuizError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     @app.exception_handler(Exception)
