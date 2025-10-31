@@ -17,16 +17,16 @@ class Question(BaseModel):
     def from_dict(data: dict) -> "Question":
         return Question(
             text=data["text"],
-            answer_list=[Answer.from_dict(ans) for ans in data["answerList"]],
-            correct_answer=data["correctAnswer"],
+            answer_list=[Answer.from_dict(ans) for ans in data["answer_list"]],
+            correct_answer=data["correct_answer"],
             value=data.get("value", 10)
         )
 
     def to_firestore_data(self) -> dict:
         return {
             "text": self.text,
-            "answerList": [ans.to_firestore_data() for ans in self.answer_list],
-            "correctAnswer": self.correct_answer,
+            "answer_list": [ans.to_firestore_data() for ans in self.answer_list],
+            "correct_answer": self.correct_answer,
             "value": self.value
         }
 

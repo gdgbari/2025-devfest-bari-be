@@ -10,7 +10,7 @@ class QuizRepository:
     """
 
     QUIZ_COLLECTION: str = "quizzes"
-    QUIZ_ID: str = "quizId"
+    QUIZ_ID: str = "quiz_id"
 
     def __init__(self, firestore_client: FirestoreClient):
         self.firestore_client = firestore_client
