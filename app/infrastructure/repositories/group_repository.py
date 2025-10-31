@@ -1,11 +1,12 @@
 import random
+
 from firebase_admin import firestore
 from google.cloud.firestore import Transaction
 
 from domain.entities.group import Group
+from infrastructure.clients.firestore_client import FirestoreClient
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
 from infrastructure.errors.group_errors import *
-from infrastructure.clients.firestore_client import FirestoreClient
 
 
 class GroupRepository:
@@ -18,7 +19,7 @@ class GroupRepository:
     GROUP_NAME: str = "name"
     GROUP_COLOR: str = "color"
     GROUP_IMAGE_URL: str = "image_url"
-    GROUP_USER_COUNT: str = "userCount"
+    GROUP_USER_COUNT: str = "user_count"
 
     def __init__(
         self,
@@ -37,6 +38,7 @@ class GroupRepository:
             group.gid = gid
             return group
         except Exception as exception:
+            print(f"EXCEPTION: {exception}")
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
                 raise CreateGroupError(message=f"Group already exists", http_status=409)
             raise CreateGroupError(message=f"Failed to create group", http_status=400)
@@ -139,7 +141,7 @@ class GroupRepository:
             if not groups_data:
                 raise ReadGroupError(message="No groups available", http_status=404)
 
-            # Find the minimum userCount among all groups
+            # Find the minimum user_count among all groups
             min_count = min(g.get(self.GROUP_USER_COUNT, 0) or 0 for g in groups_data)
 
             # Get all groups that have this minimum count

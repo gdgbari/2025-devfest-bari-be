@@ -19,8 +19,8 @@ class Group(BaseModel):
         return Group(
             name=data["name"],
             color=data["color"],
-            image_url=data["imageUrl"],
-            user_count=data["userCount"],
+            image_url=data["image_url"],
+            user_count=data["user_count"],
             gid=data["gid"] if "gid" in data else None,
         )
 
@@ -28,7 +28,7 @@ class Group(BaseModel):
         return {
             "name": self.name,
             "color": self.color,
-            "imageUrl": self.image_url,
-            "userCount": self.user_count,
+            "image_url": self.image_url,
+            "user_count": self.user_count,
         }
 
