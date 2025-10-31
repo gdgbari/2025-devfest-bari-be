@@ -6,7 +6,7 @@ from core.authorization import check_user_role, verify_id_token
 from core.dependencies import QuizServiceDep
 from domain.entities.quiz import Quiz
 
-router = APIRouter(prefix="/quiz", tags=["Quiz"])
+router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
 
 @router.post(
