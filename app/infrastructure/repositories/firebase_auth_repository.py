@@ -90,6 +90,5 @@ class FirebaseAuthRepository:
         """
         try:
             self.auth_client.set_custom_claims(uid, claims)
-            self.auth_client.refresh_token(uid)
         except Exception as e:
             raise UpdateUserAuthError(message=f"Failed to set custom claims", http_status=400)

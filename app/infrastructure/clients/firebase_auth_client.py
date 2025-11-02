@@ -141,7 +141,3 @@ class FirebaseAuthClient:
         Set customer claims for a jwt token
         """
         auth.set_custom_user_claims(uid=uid, custom_claims=claims)
-
-
-    def refresh_token(self, uid: str) -> None:
-        auth.revoke_refresh_tokens(uid=uid)
