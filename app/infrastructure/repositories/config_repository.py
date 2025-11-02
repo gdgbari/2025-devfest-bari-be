@@ -9,15 +9,15 @@ class ConfigRepository:
     Repository for managing application configuration in Firestore
     """
 
-    CONFIG_COLLECTION: str = "remoteConfig"
+    CONFIG_COLLECTION: str = "remote_config"
     CONFIG_DOC_ID: str = "config"
 
-    CHECK_IN_OPEN: str = "checkInOpen"
-    LEADERBOARD_OPEN: str = "leaderboardOpen"
-    INFO_TITLE: str = "infoTitle"
-    INFO_CONTENT: str = "infoContent"
-    WINNER_ROOM: str = "winnerRoom"
-    WINNER_TIME: str = "winnerTime"
+    CHECK_IN_OPEN: str = "check_in_open"
+    LEADERBOARD_OPEN: str = "leaderboard_open"
+    INFO_TITLE: str = "info_title"
+    INFO_CONTENT: str = "info_content"
+    WINNER_ROOM: str = "winner_room"
+    WINNER_TIME: str = "winner_time"
 
     def __init__(self, firestore_client: FirestoreClient):
         self.firestore_client = firestore_client
