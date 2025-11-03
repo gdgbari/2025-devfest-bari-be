@@ -45,6 +45,20 @@ class QuizRepository:
         except Exception:
             raise ReadQuizError(message="Failed to read quiz", http_status=400)
 
+    def read_all(self) -> list[Quiz]:
+        """
+        Reads all quizzes from Firestore.
+        """
+        try:
+            quizzes = self.firestore_client.read_all_docs(
+                collection_name=self.QUIZ_COLLECTION,
+                include_id=True,
+                id_field_name=self.QUIZ_ID,
+            )
+            return [Quiz.from_dict(quiz) for quiz in quizzes]
+        except Exception:
+            raise ReadQuizError(message="Failed to read all quizzes", http_status=400)
+
     def delete(self, quiz_id: str) -> None:
         """
         Deletes a quiz from Firestore.

@@ -15,6 +15,14 @@ class ReadQuestionSchema(BaseModel):
     value: int = Field(default=10, description="Points for correct answer")
 
 
+class ReadQuestionWithCorrectSchema(BaseModel):
+    """Question schema for staff (includes correct answer)"""
+    text: str
+    answer_list: List[ReadAnswerSchema]
+    correct_answer: str = Field(..., description="ID of the correct answer")
+    value: int = Field(default=10, description="Points for correct answer")
+
+
 class GetQuizResponse(BaseModel):
     """Response schema for getting a quiz"""
     quiz_id: str
@@ -22,4 +30,19 @@ class GetQuizResponse(BaseModel):
     question_list: List[ReadQuestionSchema]
     is_open: bool
     timer_duration: int = Field(..., description="Quiz duration in milliseconds")
+
+
+class GetQuizWithCorrectResponse(BaseModel):
+    """Response schema for getting a quiz with correct answers (staff only)"""
+    quiz_id: str
+    title: str
+    question_list: List[ReadQuestionWithCorrectSchema]
+    is_open: bool
+    timer_duration: int = Field(..., description="Quiz duration in milliseconds")
+
+
+class GetQuizListWithCorrectResponse(BaseModel):
+    """Schema for quiz list response with correct answers (staff only)"""
+    quizzes: List[GetQuizWithCorrectResponse]
+    total: int
 

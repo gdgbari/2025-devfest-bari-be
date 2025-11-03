@@ -33,6 +33,12 @@ class QuizService:
 
         return quiz
 
+    def read_all_quizzes(self) -> list[Quiz]:
+        """
+        Reads all quizzes from database.
+        """
+        return self.quiz_repository.read_all()
+
     def delete_quiz(self, quiz_id: str) -> None:
         """
         Deletes a quiz from database.
