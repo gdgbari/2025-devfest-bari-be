@@ -28,7 +28,6 @@ class GetQuizResponse(BaseModel):
     quiz_id: str
     title: str
     question_list: List[ReadQuestionSchema]
-    is_open: bool
     timer_duration: int = Field(..., description="Quiz duration in milliseconds")
 
 

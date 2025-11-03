@@ -40,7 +40,6 @@ class ReadQuizAdapter:
             quiz_id=quiz.quiz_id,
             title=quiz.title,
             question_list=questions_response,
-            is_open=quiz.is_open,
             timer_duration=quiz.timer_duration,
         )
 
