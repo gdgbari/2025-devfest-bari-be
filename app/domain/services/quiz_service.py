@@ -1,5 +1,8 @@
+from fastapi import status
+
 from domain.entities.quiz import Quiz
 from infrastructure.repositories.quiz_repository import QuizRepository
+from infrastructure.errors.quiz_errors import ReadQuizError
 
 
 class QuizService:
@@ -19,8 +22,16 @@ class QuizService:
     def read_quiz(self, quiz_id: str) -> Quiz:
         """
         Reads a quiz from database.
+        Raises ReadQuizError if quiz is not open.
         """
-        return self.quiz_repository.read(quiz_id)
+
+        quiz = self.quiz_repository.read(quiz_id)
+
+        # Check if quiz is open
+        if not quiz.is_open:
+            raise ReadQuizError("Quiz is not open", http_status=status.HTTP_403_FORBIDDEN)
+
+        return quiz
 
     def delete_quiz(self, quiz_id: str) -> None:
         """
