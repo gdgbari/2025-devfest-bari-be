@@ -39,7 +39,7 @@ class QuizTimeUpError(BaseError):
 
 class QuizStartTimeNotFoundError(BaseError):
     """Raised when quiz start time is not found for user"""
-    def __init__(self, message: str = "Quiz start time not found", http_status: int = 400):
+    def __init__(self, message: str = "Quiz start time not found", http_status: int = 404):
         super().__init__(message, status_code=http_status)
 
 
