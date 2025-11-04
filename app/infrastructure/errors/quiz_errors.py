@@ -24,3 +24,27 @@ class UpdateQuizError(BaseError):
     def __init__(self, message: str, http_status: int):
         super().__init__(message, status_code=http_status)
 
+
+class QuizAlreadySubmittedError(BaseError):
+    """Raised when user tries to submit a quiz they already submitted"""
+    def __init__(self, message: str = "Quiz already submitted", http_status: int = 400):
+        super().__init__(message, status_code=http_status)
+
+
+class QuizTimeUpError(BaseError):
+    """Raised when quiz time has expired"""
+    def __init__(self, message: str = "Quiz time is up", http_status: int = 403):
+        super().__init__(message, status_code=http_status)
+
+
+class QuizStartTimeNotFoundError(BaseError):
+    """Raised when quiz start time is not found for user"""
+    def __init__(self, message: str = "Quiz start time not found", http_status: int = 400):
+        super().__init__(message, status_code=http_status)
+
+
+class InvalidAnswerListError(BaseError):
+    """Raised when answer list length doesn't match questions"""
+    def __init__(self, message: str, http_status: int = 400):
+        super().__init__(message, status_code=http_status)
+

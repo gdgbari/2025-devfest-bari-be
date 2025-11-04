@@ -248,3 +248,56 @@ class FirestoreRepository:
             raise UpdateUserError(message=f"User not found", http_status=404)
         except Exception as e:
             raise UpdateUserError(message=f"Failed to assign group", http_status=400)
+
+
+    def read_from_subcollection(
+        self,
+        document_id: str,
+        subcollection: str,
+        subdocument_id: str
+    ) -> dict:
+        """
+        Read a document from a subcollection.
+        Raises DocumentNotFoundError if not found.
+        """
+        try:
+            doc_ref = (
+                self.firestore_client.db.collection(self.USERS_COLLECTION)
+                .document(document_id)
+                .collection(subcollection)
+                .document(subdocument_id)
+            )
+            doc = doc_ref.get()
+
+            if not doc.exists:
+                raise DocumentNotFoundError(
+                    f"Document not found in subcollection {subcollection}"
+                )
+
+            return doc.to_dict()
+        except DocumentNotFoundError:
+            raise
+        except Exception as e:
+            raise ReadUserError(f"Error reading from subcollection {subcollection}", http_status=400)
+
+
+    def write_to_subcollection(
+        self,
+        document_id: str,
+        subcollection: str,
+        subdocument_id: str,
+        data: dict
+    ) -> None:
+        """
+        Write a document to a subcollection.
+        """
+        try:
+            doc_ref = (
+                self.firestore_client.db.collection(self.USERS_COLLECTION)
+                .document(document_id)
+                .collection(subcollection)
+                .document(subdocument_id)
+            )
+            doc_ref.set(data)
+        except Exception as e:
+            raise CreateUserError(f"Error writing to subcollection", http_status=400)

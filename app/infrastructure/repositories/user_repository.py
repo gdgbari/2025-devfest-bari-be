@@ -1,13 +1,21 @@
+from typing import Optional
 from infrastructure.repositories.firebase_auth_repository import FirebaseAuthRepository
 from infrastructure.repositories.firestore_repository import FirestoreRepository
 from domain.entities.user import User
+from domain.entities.quiz_result import QuizResult
+from domain.entities.quiz_start_time import QuizStartTime
 from infrastructure.errors.user_errors import *
 from infrastructure.errors.auth_errors import *
+from infrastructure.errors.firestore_errors import DocumentNotFoundError
 
 class UserRepository:
     """
     Repository for managing all user operations coordinating firebase auth and firestore
     """
+
+    # Collection names
+    QUIZ_RESULTS_COLLECTION: str = "quiz_results"
+    QUIZ_START_TIMES_COLLECTION: str = "quiz_start_times"
 
     # User field names
     USER_EMAIL: str = "email"
@@ -105,3 +113,59 @@ class UserRepository:
         self.auth_repository.update_custom_claims(uid=uid, claims={"checked_in": True})
 
         return self.read(uid)
+
+
+    def get_quiz_result(self, uid: str, quiz_id: str) -> Optional[QuizResult]:
+        """
+        Get quiz result for a user if it exists.
+        Returns None if not found.
+        """
+        try:
+            data = self.firestore_repository.read_from_subcollection(
+                document_id=uid,
+                subcollection=self.QUIZ_RESULTS_COLLECTION,
+                subdocument_id=quiz_id
+            )
+            return QuizResult.from_dict(data)
+        except DocumentNotFoundError:
+            return None
+
+
+    def save_quiz_result(self, uid: str, quiz_id: str, result: QuizResult) -> None:
+        """
+        Save quiz result to user's quiz_results subcollection.
+        """
+        self.firestore_repository.write_to_subcollection(
+            document_id=uid,
+            subcollection=self.QUIZ_RESULTS_COLLECTION,
+            subdocument_id=quiz_id,
+            data=result.to_firestore_data()
+        )
+
+
+    def get_quiz_start_time(self, uid: str, quiz_id: str) -> Optional[QuizStartTime]:
+        """
+        Get quiz start time for a user if it exists.
+        Returns None if not found.
+        """
+        try:
+            data = self.firestore_repository.read_from_subcollection(
+                document_id=uid,
+                subcollection=self.QUIZ_START_TIMES_COLLECTION,
+                subdocument_id=quiz_id
+            )
+            return QuizStartTime.from_dict(data)
+        except DocumentNotFoundError:
+            return None
+
+
+    def save_quiz_start_time(self, uid: str, quiz_id: str, start_time: QuizStartTime) -> None:
+        """
+        Save quiz start time to user's quiz_start_times subcollection.
+        """
+        self.firestore_repository.write_to_subcollection(
+            document_id=uid,
+            subcollection=self.QUIZ_START_TIMES_COLLECTION,
+            subdocument_id=quiz_id,
+            data=start_time.to_firestore_data()
+        )
