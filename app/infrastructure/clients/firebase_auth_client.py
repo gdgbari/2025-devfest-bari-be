@@ -42,7 +42,10 @@ class FirebaseAuthClient:
             str: The UID of the created user.
         """
         user_record: UserRecord = auth.create_user(
-            email=email, password=password, display_name=display_name
+            email=email,
+            password=password,
+            display_name=display_name,
+            email_verified=True
         )
         self.update_custom_claims(
             user_record.uid, {"user_role": "attendee", "checked_in": False}
