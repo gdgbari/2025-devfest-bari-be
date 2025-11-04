@@ -95,6 +95,22 @@ def register_exception_handlers(app: FastAPI):
     async def delete_quiz_error_handler(request: Request, exc: DeleteQuizError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
+    @app.exception_handler(QuizAlreadySubmittedError)
+    async def quiz_already_submitted_error_handler(request: Request, exc: QuizAlreadySubmittedError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(QuizTimeUpError)
+    async def quiz_time_up_error_handler(request: Request, exc: QuizTimeUpError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(QuizStartTimeNotFoundError)
+    async def quiz_start_time_not_found_error_handler(request: Request, exc: QuizStartTimeNotFoundError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(InvalidAnswerListError)
+    async def invalid_answer_list_error_handler(request: Request, exc: InvalidAnswerListError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
         raise HTTPException(status_code=500, detail="Internal server error")
