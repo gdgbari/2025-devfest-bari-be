@@ -1,6 +1,7 @@
 from typing import Optional
 from infrastructure.repositories.firebase_auth_repository import FirebaseAuthRepository
 from infrastructure.repositories.firestore_repository import FirestoreRepository
+from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from domain.entities.user import User
 from domain.entities.quiz_result import QuizResult
 from domain.entities.quiz_start_time import QuizStartTime
@@ -25,15 +26,17 @@ class UserRepository:
     def __init__(
         self,
         auth_repository: FirebaseAuthRepository,
-        firestore_repository: FirestoreRepository
+        firestore_repository: FirestoreRepository,
+        leaderboard_repository: LeaderboardRepository
     ):
         self.auth_repository = auth_repository
         self.firestore_repository = firestore_repository
+        self.leaderboard_repository = leaderboard_repository
 
 
     def create(self, user: User) -> User:
         """
-        Create a user with unique nickname, then in firebase auth and in the end in firestore.
+        Create a user with unique nickname, then in firebase auth, in firestore, and leaderboard entry.
         If any exception happens at any step there is a rollback, in a way to keep consistent data.
         """
         try:
@@ -45,6 +48,8 @@ class UserRepository:
             user.uid = uid
             # Create user data in Firestore
             self.firestore_repository.create_user(user)
+            # Create leaderboard entry
+            self.leaderboard_repository.create_user_entry(uid, user.nickname)
             # Return new user
             return user
         except AuthenticateUserError as e:
@@ -52,7 +57,10 @@ class UserRepository:
             raise e
         except CreateUserError as e:
             self.firestore_repository.delete_nickname(user.nickname)
-            self.auth_repository.delete_auth(user.uid)
+            if hasattr(user, 'uid') and user.uid:
+                self.auth_repository.delete_auth(user.uid)
+                # Try to delete leaderboard entry if it was created
+                self.leaderboard_repository.delete_user_entry(user.uid)
             raise e
 
 

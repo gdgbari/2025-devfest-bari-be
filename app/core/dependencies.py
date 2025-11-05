@@ -16,6 +16,7 @@ from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.firestore_repository import \
     FirestoreRepository
 from infrastructure.repositories.group_repository import GroupRepository
+from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
 
@@ -56,12 +57,21 @@ def get_firestore_repository(
 
 FirestoreRepositoryDep = Annotated[FirestoreRepository, Depends(get_firestore_repository)]
 
+def get_leaderboard_repository(
+    firestore_client: FirestoreClientDep
+) -> LeaderboardRepository:
+    """Dependency to get LeaderboardRepository instance"""
+    return LeaderboardRepository(firestore_client)
+
+LeaderboardRepositoryDep = Annotated[LeaderboardRepository, Depends(get_leaderboard_repository)]
+
 def get_user_repository(
     auth_repository: AuthRepositoryDep,
-    firestore_repository: FirestoreRepositoryDep
+    firestore_repository: FirestoreRepositoryDep,
+    leaderboard_repository: LeaderboardRepositoryDep
 ) -> UserRepository:
     """Dependency to get UserRepository instance"""
-    return UserRepository(auth_repository, firestore_repository)
+    return UserRepository(auth_repository, firestore_repository, leaderboard_repository)
 
 UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
 
@@ -114,10 +124,16 @@ ConfigServiceDep = Annotated[ConfigService, Depends(get_config_service)]
 def get_check_in_service(
     group_service: GroupServiceDep,
     user_service: UserServiceDep,
-    config_service: ConfigServiceDep
+    config_service: ConfigServiceDep,
+    leaderboard_repository: LeaderboardRepositoryDep
 ) -> CheckInService:
     """Dependency to get CheckInService with injected services"""
-    return CheckInService(user_service=user_service, group_service=group_service, config_service=config_service)
+    return CheckInService(
+        user_service=user_service,
+        group_service=group_service,
+        config_service=config_service,
+        leaderboard_repository=leaderboard_repository
+    )
 
 CheckInServiceDep = Annotated[CheckInService, Depends(get_check_in_service)]
 
