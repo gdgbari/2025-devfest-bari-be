@@ -111,6 +111,10 @@ def register_exception_handlers(app: FastAPI):
     async def invalid_answer_list_error_handler(request: Request, exc: InvalidAnswerListError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
+    @app.exception_handler(IncrementScoreError)
+    async def increment_score_error_handler(request: Request, exc: IncrementScoreError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
         raise HTTPException(status_code=500, detail="Internal server error")

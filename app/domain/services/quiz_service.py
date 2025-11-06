@@ -7,6 +7,7 @@ from domain.entities.quiz_result import QuizResult
 from domain.entities.quiz_start_time import QuizStartTime
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.errors.quiz_errors import (
     ReadQuizError,
     QuizAlreadySubmittedError,
@@ -24,9 +25,15 @@ class QuizService:
     Service that manages all operations related to quizzes
     """
 
-    def __init__(self, quiz_repository: QuizRepository, user_repository: UserRepository):
+    def __init__(
+        self,
+        quiz_repository: QuizRepository,
+        user_repository: UserRepository,
+        leaderboard_repository: LeaderboardRepository
+    ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
+        self.leaderboard_repository = leaderboard_repository
 
     def create_quiz(self, quiz: Quiz) -> Quiz:
         """
@@ -122,9 +129,29 @@ class QuizService:
         )
         self.user_repository.save_quiz_result(user_id, quiz_id, result)
 
-        # TODO: Update leaderboard (skip for now as requested)
+        # Update leaderboard scores atomically
+        self._update_leaderboard_scores(user_id, score)
 
         return score, max_score
+
+    def _update_leaderboard_scores(self, user_id: str, score: int) -> None:
+        """
+        Updates leaderboard scores for user and group atomically.
+
+        Args:
+            user_id (str): The user's UID
+            score (int): The points to add
+        """
+        # Read user to get group information
+        user = self.user_repository.read(user_id)
+
+        # Increment user score atomically
+        self.leaderboard_repository.increment_user_score(user_id, score)
+
+        # Increment group score atomically if user has a group
+        if user.group and user.group.get("gid"):
+            group_id = user.group.get("gid")
+            self.leaderboard_repository.increment_group_score(group_id, score)
 
 
     def _validate_submission(self, user_id: str, quiz_id: str) -> None:
