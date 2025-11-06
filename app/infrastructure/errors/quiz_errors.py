@@ -48,3 +48,9 @@ class InvalidAnswerListError(BaseError):
     def __init__(self, message: str, http_status: int = 400):
         super().__init__(message, status_code=http_status)
 
+
+class IncrementScoreError(BaseError):
+    """Raised when incrementing leaderboard scores fails"""
+    def __init__(self, message: str = "Failed to increment score", http_status: int = 400):
+        super().__init__(message, status_code=http_status)
+
