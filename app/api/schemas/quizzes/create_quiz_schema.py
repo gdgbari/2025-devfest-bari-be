@@ -4,8 +4,7 @@ from api.schemas.quizzes.base_schema import QuizBaseSchema
 
 class CreateQuizRequest(QuizBaseSchema):
     """Request schema for creating a quiz"""
-    # timer_duration is in MINUTES in the request body
-    timer_duration: int = Field(default=3, description="Quiz duration in minutes")
+    # timer_duration is read from remote_config, not from request
 
 
 class CreateQuizResponse(QuizBaseSchema):

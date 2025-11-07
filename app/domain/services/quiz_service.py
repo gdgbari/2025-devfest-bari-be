@@ -8,6 +8,7 @@ from domain.entities.quiz_start_time import QuizStartTime
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
+from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.errors.quiz_errors import (
     ReadQuizError,
     QuizAlreadySubmittedError,
@@ -18,6 +19,7 @@ from infrastructure.errors.quiz_errors import (
 
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
+DEFAULT_TIMER_DURATION_MS = 3 * 60 * 1000  # 3 minutes in milliseconds
 
 
 class QuizService:
@@ -29,16 +31,30 @@ class QuizService:
         self,
         quiz_repository: QuizRepository,
         user_repository: UserRepository,
-        leaderboard_repository: LeaderboardRepository
+        leaderboard_repository: LeaderboardRepository,
+        config_repository: ConfigRepository
     ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
         self.leaderboard_repository = leaderboard_repository
+        self.config_repository = config_repository
 
     def create_quiz(self, quiz: Quiz) -> Quiz:
         """
         Creates a quiz in database.
+        Timer duration is read from remote_config, defaulting to 3 minutes if not set.
         """
+        # Get timer_duration from config or use default
+        try:
+            config = self.config_repository.read_config()
+            timer_duration = config.timer_duration if config.timer_duration is not None else DEFAULT_TIMER_DURATION_MS
+        except Exception:
+            # If config read fails, use default
+            timer_duration = DEFAULT_TIMER_DURATION_MS
+
+        # Set timer_duration on quiz
+        quiz.timer_duration = timer_duration
+
         return self.quiz_repository.create(quiz)
 
     def _read_quiz(self, quiz_id: str) -> Quiz:

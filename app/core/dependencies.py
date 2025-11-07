@@ -150,9 +150,10 @@ QuizRepositoryDep = Annotated[QuizRepository, Depends(get_quiz_repository)]
 def get_quiz_service(
     quiz_repository: QuizRepositoryDep,
     user_repository: UserRepositoryDep,
-    leaderboard_repository: LeaderboardRepositoryDep
+    leaderboard_repository: LeaderboardRepositoryDep,
+    config_repository: ConfigRepositoryDep
 ) -> QuizService:
     """Dependency to get QuizService with injected repositories"""
-    return QuizService(quiz_repository, user_repository, leaderboard_repository)
+    return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository)
 
 QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
