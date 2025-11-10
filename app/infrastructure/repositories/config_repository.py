@@ -18,6 +18,7 @@ class ConfigRepository:
     INFO_CONTENT: str = "info_content"
     WINNER_ROOM: str = "winner_room"
     WINNER_TIME: str = "winner_time"
+    TIMER_DURATION: str = "timer_duration"
 
     def __init__(self, firestore_client: FirestoreClient):
         self.firestore_client = firestore_client
@@ -44,7 +45,8 @@ class ConfigRepository:
                 info_title=config_data.get(self.INFO_TITLE),
                 info_content=config_data.get(self.INFO_CONTENT),
                 winner_room=config_data.get(self.WINNER_ROOM),
-                winner_time=config_data.get(self.WINNER_TIME)
+                winner_time=config_data.get(self.WINNER_TIME),
+                timer_duration=config_data.get(self.TIMER_DURATION)
             )
         except DocumentNotFoundError:
             raise ReadConfigError(message="Configuration not found", http_status=404)

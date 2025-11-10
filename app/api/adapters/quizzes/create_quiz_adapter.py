@@ -15,12 +15,8 @@ class CreateQuizAdapter:
     def to_create_quiz_domain(request: CreateQuizRequest) -> Quiz:
         """
         Convert CreateQuizRequest to Quiz domain object.
-
-        Note: timer_duration is converted from minutes to milliseconds
+        Note: timer_duration will be set by the service from remote_config.
         """
-        # Convert timer_duration from minutes to milliseconds
-        timer_duration_ms = request.timer_duration * 60 * 1000
-
         # Convert questions
         questions = []
         for q_schema in request.question_list:
@@ -37,7 +33,7 @@ class CreateQuizAdapter:
             title=request.title,
             question_list=questions,
             is_open=False,  # Always default to False on creation
-            timer_duration=timer_duration_ms
+            timer_duration=0  # Will be set by service from config
         )
 
     @staticmethod
