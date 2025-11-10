@@ -4,6 +4,7 @@ from .create_quiz import router as create_quiz_router
 from .delete_quiz import router as delete_quiz_router
 from .read_quiz import router as read_quiz_router
 from .submit_quiz import router as submit_quiz_router
+from .update_quiz import router as update_quiz_router
 
 router = APIRouter()
 
@@ -11,4 +12,5 @@ router.include_router(create_quiz_router)
 router.include_router(delete_quiz_router)
 router.include_router(read_quiz_router)
 router.include_router(submit_quiz_router)
+router.include_router(update_quiz_router)
 
