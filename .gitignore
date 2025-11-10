@@ -1,6 +1,6 @@
 **/__pycache__
 **/*.pyc
 .venv/**
-app/.env
-app/secrets/**
-!app/secrets/.gitkeep
+.env
+secrets/**
+!secrets/.gitkeep
