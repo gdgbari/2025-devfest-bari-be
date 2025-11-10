@@ -1,6 +1,11 @@
 from domain.entities.quiz import Quiz
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
-from infrastructure.errors.quiz_errors import *
+from infrastructure.errors.quiz_errors import (
+    CreateQuizError,
+    ReadQuizError,
+    UpdateQuizError,
+    DeleteQuizError
+)
 from infrastructure.clients.firestore_client import FirestoreClient
 
 
@@ -58,6 +63,32 @@ class QuizRepository:
             return [Quiz.from_dict(quiz) for quiz in quizzes]
         except Exception:
             raise ReadQuizError(message="Failed to read all quizzes", http_status=400)
+
+    def update(self, quiz_id: str, quiz_update: dict) -> Quiz:
+        """
+        Updates a quiz in Firestore.
+        """
+        try:
+            allowed_fields = {"title", "question_list", "is_open"}
+            update_params = {
+                k: v for k, v in quiz_update.items()
+                if v is not None and k in allowed_fields
+            }
+
+            if not update_params:
+                # Nothing to update, just return current quiz
+                return self.read(quiz_id)
+
+            self.firestore_client.update_doc(
+                collection_name=self.QUIZ_COLLECTION,
+                doc_id=quiz_id,
+                doc_data=update_params
+            )
+            return self.read(quiz_id)
+        except DocumentNotFoundError:
+            raise UpdateQuizError(message="Quiz not found", http_status=404)
+        except Exception:
+            raise UpdateQuizError(message="Failed to update quiz", http_status=400)
 
     def delete(self, quiz_id: str) -> None:
         """

@@ -77,6 +77,12 @@ class QuizService:
         """
         return self.quiz_repository.read_all()
 
+    def update_quiz(self, quiz_id: str, quiz_update: dict) -> Quiz:
+        """
+        Updates a quiz in database.
+        """
+        return self.quiz_repository.update(quiz_id, quiz_update)
+
     def delete_quiz(self, quiz_id: str) -> None:
         """
         Deletes a quiz from database.
