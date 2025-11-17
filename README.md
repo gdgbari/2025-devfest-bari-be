@@ -124,21 +124,29 @@ pip install -r app/requirements.txt
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
    - Enable **Authentication** (Email/Password provider)
    - Enable **Firestore Database**
+
+4. **Set up authentication**
+
+   **For local development:**
+   
    - Generate a service account key:
      - Go to Project Settings → Service Accounts
      - Click "Generate New Private Key"
-     - Save as `/app/secrets/service_account_key.json`
-
-4. **Set environment variables** (optional)
-
-Create a `.env` file in the project root:
-
-```env
-FIREBASE_SERVICE_ACCOUNT_PATH=/app/secrets/service_account_key.json
-API_ROOT_PATH=/api
-VERSION=1.0.0
-DEBUG=False
-```
+     - Save the JSON file (e.g., `secrets/service_account_key.json`)
+   - Create a `.env` file in the project root:
+   
+   ```env
+   FIREBASE_SERVICE_ACCOUNT_PATH=secrets/service_account_key.json
+   VERSION=1.0.0
+   DEBUG=False
+   ```
+   
+   **For Cloud Run deployment:**
+   
+   - The application automatically uses Application Default Credentials (ADC)
+   - No service account key file is needed
+   - Ensure the Cloud Run service has the appropriate service account attached with Firebase permissions
+   - You can leave `FIREBASE_SERVICE_ACCOUNT_PATH` empty or unset in your Cloud Run environment variables
 
 ### Running the Application
 
@@ -352,7 +360,8 @@ app.dependency_overrides[get_user_repository] = lambda: MockUserRepository()
 ## Security Considerations
 
 - ✅ Passwords are hashed and managed by Firebase Auth
-- ✅ Service account key must be kept secure
+- ✅ Service account key must be kept secure (local development only)
+- ✅ Cloud Run uses Application Default Credentials (ADC) - no key files needed
 - ✅ Firestore security rules should be configured
 - ✅ Use HTTPS in production
 - ✅ Environment variables for sensitive configuration
@@ -362,10 +371,11 @@ app.dependency_overrides[get_user_repository] = lambda: MockUserRepository()
 
 ### Settings (core/settings.py)
 
-- `FIREBASE_SERVICE_ACCOUNT_PATH`: Path to Firebase service account key
-- `API_ROOT_PATH`: API base path (default: `/api`)
-- `VERSION`: API version
-- `DEBUG`: Debug mode flag
+- `FIREBASE_SERVICE_ACCOUNT_PATH` (optional): Path to Firebase service account key JSON file
+  - **Local development**: Set this to the path of your service account key file
+  - **Cloud Run**: Leave empty or unset to use Application Default Credentials (ADC)
+- `VERSION`: API version (default: `1.0.0`)
+- `DEBUG`: Debug mode flag (default: `False`)
 
 ## Firebase Setup
 
