@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional
 
 import firebase_admin
@@ -26,12 +27,23 @@ class FirestoreClient:
     def __init__(self) -> None:
         """
         Initializes the Firestore client and Firebase app if not already initialized.
+        
+        In local development: uses service account key file if specified and exists.
+        On Cloud Run: uses Application Default Credentials (ADC) automatically provided by GCP.
         """
         if not firebase_admin._apps:
-            cred: credentials.Certificate = credentials.Certificate(
+            # Check if service account path is provided and file exists (local development)
+            if (
                 settings.firebase_service_account_path
-            )
-            firebase_admin.initialize_app(cred)
+                and os.path.exists(settings.firebase_service_account_path)
+            ):
+                cred: credentials.Certificate = credentials.Certificate(
+                    settings.firebase_service_account_path
+                )
+                firebase_admin.initialize_app(cred)
+            else:
+                # Use Application Default Credentials (Cloud Run or local with gcloud auth)
+                firebase_admin.initialize_app()
         self.db = firestore.client()
         self._initialized: bool = True
 

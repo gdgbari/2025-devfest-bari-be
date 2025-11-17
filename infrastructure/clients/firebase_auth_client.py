@@ -1,9 +1,11 @@
+import os
+from typing import Any, Dict, List, Optional
+
 import firebase_admin
 from firebase_admin import auth, credentials
-from firebase_admin.auth import UserRecord, ListUsersPage
+from firebase_admin.auth import ListUsersPage, UserRecord
 
 from core.settings import settings
-from typing import Optional, Any, Dict, List
 
 
 class FirebaseAuthClient:
@@ -19,12 +21,23 @@ class FirebaseAuthClient:
     def __init__(self) -> None:
         """
         Initialize the Firebase client and Firebase app if not already initialized.
+        
+        In local development: uses service account key file if specified and exists.
+        On Cloud Run: uses Application Default Credentials (ADC) automatically provided by GCP.
         """
         if not firebase_admin._apps:
-            cred: credentials.Certificate = credentials.Certificate(
+            # Check if service account path is provided and file exists (local development)
+            if (
                 settings.firebase_service_account_path
-            )
-            firebase_admin.initialize_app(cred)
+                and os.path.exists(settings.firebase_service_account_path)
+            ):
+                cred: credentials.Certificate = credentials.Certificate(
+                    settings.firebase_service_account_path
+                )
+                firebase_admin.initialize_app(cred)
+            else:
+                # Use Application Default Credentials (Cloud Run or local with gcloud auth)
+                firebase_admin.initialize_app()
         self._initialized: bool = True
 
     def create_user(

@@ -7,6 +7,4 @@ services:
     container_name: devfest-bari-2025-api-container
     working_dir: /app
     ports:
-      - "8000:8000"
-    volumes:
-      - ./app:/app
+      - "8080:8080"

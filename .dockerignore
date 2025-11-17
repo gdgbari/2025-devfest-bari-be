@@ -4,7 +4,8 @@
 .github/**
 .git/**
 .gitignore
-app/.env
-app/secrets/**
+.env
+env-template
+secrets/**
 Dockerfile
 .dockerignore

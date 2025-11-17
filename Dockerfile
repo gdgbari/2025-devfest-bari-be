@@ -1,11 +1,17 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
+
+ENV PORT=8080
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
+COPY ./requirements.in /app
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+RUN pip install --no-cache-dir pip-tools
 
-RUN rm /app/requirements.txt
+RUN pip-compile --upgrade
 
-CMD ["python3", "/app/main.py"]
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
+
+CMD [ "python", "run.py" ]
