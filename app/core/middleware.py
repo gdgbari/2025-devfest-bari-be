@@ -1,8 +1,7 @@
+from core.settings import settings
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
-from core.settings import settings
 
 
 async def remove_trailing_slash(request: Request, call_next):
@@ -35,14 +34,13 @@ def add_middlewares(app: FastAPI) -> None:
     Args:
         app (FastAPI): The FastAPI application instance.
     """
-    if settings.debug:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"] if settings.debug else ["https://bari.devfest.it"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     middlewares = [
         remove_trailing_slash,
