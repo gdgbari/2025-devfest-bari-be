@@ -2,7 +2,7 @@ import os
 
 import uvicorn
 
-reload = True if os.environ.get("ENVIRONMENT") == "local" else False
+reload = os.environ.get("DEBUG") == "True"
 workers = os.environ.get("CPU", "1")
 
 if __name__ == "__main__":

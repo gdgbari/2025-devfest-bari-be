@@ -1,7 +1,0 @@
-fastapi[standard]
-uvicorn[standard]
-pydantic
-pydantic[email]
-pydantic-settings
-firebase-admin
-google-cloud-firestore
