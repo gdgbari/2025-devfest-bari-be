@@ -30,7 +30,8 @@ class UpdateQuizAdapter:
                     text=q_schema.text,
                     answer_list=answers,
                     correct_answer=q_schema.correct_answer,
-                    value=q_schema.value
+                    value=q_schema.value,
+                    question_id=q_schema.question_id
                 )
                 questions.append(question)
             # Convert to firestore format
@@ -52,7 +53,8 @@ class UpdateQuizAdapter:
                 text=q.text,
                 answer_list=answers_response,
                 correct_answer=q.correct_answer,
-                value=q.value
+                value=q.value,
+                question_id=q.question_id
             )
             questions_response.append(question_response)
 

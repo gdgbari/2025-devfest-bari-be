@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 
 class ReadAnswerSchema(BaseModel):
@@ -13,6 +13,7 @@ class ReadQuestionSchema(BaseModel):
     text: str
     answer_list: List[ReadAnswerSchema]
     value: int = Field(default=10, description="Points for correct answer")
+    question_id: Optional[str] = Field(None, description="Unique identifier for the question")
 
 
 class ReadQuestionWithCorrectSchema(BaseModel):
@@ -21,6 +22,7 @@ class ReadQuestionWithCorrectSchema(BaseModel):
     answer_list: List[ReadAnswerSchema]
     correct_answer: str = Field(..., description="ID of the correct answer")
     value: int = Field(default=10, description="Points for correct answer")
+    question_id: Optional[str] = Field(None, description="Unique identifier for the question")
 
 
 class GetQuizResponse(BaseModel):

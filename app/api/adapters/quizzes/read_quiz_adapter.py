@@ -33,6 +33,7 @@ class ReadQuizAdapter:
                 text=q.text,
                 answer_list=answers_response,
                 value=q.value,
+                question_id=q.question_id
             )
             questions_response.append(question_response)
 
@@ -62,6 +63,7 @@ class ReadQuizAdapter:
                 answer_list=answers_response,
                 correct_answer=q.correct_answer,
                 value=q.value,
+                question_id=q.question_id
             )
             questions_response.append(question_response)
 

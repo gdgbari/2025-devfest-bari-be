@@ -40,6 +40,7 @@ class QuizService:
         """
         Creates a quiz in database.
         Timer duration is read from remote_config, defaulting to 3 minutes if not set.
+        Generates unique question_id for each question.
         """
         # Get timer_duration from config or use default
         try:
@@ -51,6 +52,11 @@ class QuizService:
 
         # Set timer_duration on quiz
         quiz.timer_duration = timer_duration
+
+        # Generate unique question_id for each question
+        for question in quiz.question_list:
+            if question.question_id is None:
+                question.question_id = str(uuid.uuid4())
 
         return self.quiz_repository.create(quiz)
 
