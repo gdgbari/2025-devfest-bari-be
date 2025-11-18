@@ -1,22 +1,19 @@
 import time
 from typing import Optional
-from fastapi import status
 
 from domain.entities.quiz import Quiz
 from domain.entities.quiz_result import QuizResult
 from domain.entities.quiz_start_time import QuizStartTime
+from fastapi import status
+from infrastructure.errors.quiz_errors import (InvalidAnswerListError,
+                                               QuizAlreadySubmittedError,
+                                               QuizStartTimeNotFoundError,
+                                               QuizTimeUpError, ReadQuizError)
+from infrastructure.repositories.config_repository import ConfigRepository
+from infrastructure.repositories.leaderboard_repository import \
+    LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
-from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
-from infrastructure.repositories.config_repository import ConfigRepository
-from infrastructure.errors.quiz_errors import (
-    ReadQuizError,
-    QuizAlreadySubmittedError,
-    QuizTimeUpError,
-    QuizStartTimeNotFoundError,
-    InvalidAnswerListError
-)
-
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
 DEFAULT_TIMER_DURATION_MS = 3 * 60 * 1000  # 3 minutes in milliseconds
@@ -97,11 +94,12 @@ class QuizService:
         - First access: creates start_time and begins the countdown, returns full timer_duration
         - Subsequent accesses: calculates remaining time and updates quiz.timer_duration
 
-        Time validation is done ONLY during submit, not during read.
-        This allows users to re-read questions even after time expires (timer_duration could be <= 0).
+        If timer_duration is 0 (time expired), raises QuizTimeUpError.
+        Users can only read the quiz while time is still available.
 
         Raises:
             ReadQuizError: if quiz is not open
+            QuizTimeUpError: if timer has expired (timer_duration is 0)
         """
         # Read quiz (checks if open)
         quiz = self._read_quiz(quiz_id)
@@ -119,6 +117,12 @@ class QuizService:
             elapsed_time = current_time - start_time.started_at
             remaining_time = quiz.timer_duration - elapsed_time
             quiz.timer_duration = remaining_time if remaining_time > 0 else 0
+            
+            # Check if time has expired
+            if quiz.timer_duration == 0:
+                raise QuizTimeUpError("Quiz time has expired")
+
+        print(quiz)
 
         return quiz
 
