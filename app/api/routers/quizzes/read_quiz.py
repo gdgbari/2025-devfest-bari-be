@@ -1,14 +1,12 @@
-from fastapi import APIRouter, Depends, status
-
 from api.adapters.quizzes.read_quiz_adapter import ReadQuizAdapter
 from api.schemas.quizzes.read_quiz_schema import (
-    GetQuizResponse,
-    GetQuizListWithCorrectResponse,
-)
-from core.authorization import check_user_checked_in, check_user_role, verify_id_token
+    GetQuizListWithCorrectResponse, GetQuizResponse)
+from core.authorization import (check_user_checked_in, check_user_role,
+                                verify_id_token)
 from core.dependencies import QuizServiceDep
 from domain.entities.quiz import Quiz
 from domain.entities.role import Role
+from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
@@ -51,7 +49,7 @@ def read_all_quizzes(
         200: {"description": "Quiz retrieved successfully and timer started (if first access)"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
-        403: {"description": "Forbidden - Quiz is not open or user not checked in"},
+        403: {"description": "Forbidden - Quiz is not open, user not checked in, or quiz time has expired"},
         404: {"description": "Not found - Quiz not found in Firestore"},
         500: {"description": "Internal server error"},
     },
@@ -66,10 +64,10 @@ def read_quiz(
 
     Timer behavior:
     - First access: Timer starts (creates start_time)
-    - Subsequent accesses: Timer does NOT reset, user can re-read questions
+    - Subsequent accesses: Timer does NOT reset, user can re-read questions while time is available
 
-    Time validation happens only during submit, not during read.
-    This allows users to review questions even after time expires.
+    Time validation happens during read. If timer_duration is 0 (time expired),
+    the request will fail with a 403 error. Users cannot read the quiz after time expires.
 
     Only open quizzes can be read by attendees.
     User must be checked in.
