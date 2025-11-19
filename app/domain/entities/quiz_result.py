@@ -8,7 +8,7 @@ class QuizResult(BaseModel):
     score: int
     max_score: int
     quiz_title: str
-    submit_at: int  # milliseconds
+    submitted_at: int  # milliseconds
 
     @staticmethod
     def from_dict(data: dict) -> "QuizResult":
@@ -16,7 +16,7 @@ class QuizResult(BaseModel):
             score=data["score"],
             max_score=data["max_score"],
             quiz_title=data["quiz_title"],
-            submit_at=data["submit_at"]
+            submitted_at=data["submitted_at"]
         )
 
     def to_firestore_data(self) -> dict:
@@ -24,6 +24,6 @@ class QuizResult(BaseModel):
             "score": self.score,
             "max_score": self.max_score,
             "quiz_title": self.quiz_title,
-            "submit_at": self.submit_at
+            "submitted_at": self.submitted_at
         }
 

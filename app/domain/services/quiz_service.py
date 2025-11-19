@@ -161,7 +161,7 @@ class QuizService:
             score=score,
             max_score=max_score,
             quiz_title=quiz.title,
-            submit_at=current_time
+            submitted_at=current_time
         )
         self.user_repository.save_quiz_result(user_id, quiz_id, result)
 
