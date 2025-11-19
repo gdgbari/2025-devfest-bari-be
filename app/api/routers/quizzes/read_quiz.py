@@ -49,8 +49,9 @@ def read_all_quizzes(
         200: {"description": "Quiz retrieved successfully and timer started (if first access)"},
         400: {"description": "Bad request - Firestore operation failed"},
         401: {"description": "Unauthorized - Invalid or expired token"},
-        403: {"description": "Forbidden - Quiz is not open, user not checked in, or quiz time has expired"},
+        403: {"description": "Forbidden - Quiz is not open or user not checked in"},
         404: {"description": "Not found - Quiz not found in Firestore"},
+        408: {"description": "Request Timeout - Quiz time has expired"},
         500: {"description": "Internal server error"},
     },
 )

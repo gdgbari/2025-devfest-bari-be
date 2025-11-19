@@ -60,17 +60,21 @@ class QuizService:
 
         return self.quiz_repository.create(quiz)
 
-    def _read_quiz(self, quiz_id: str) -> Quiz:
+    def _read_quiz(self, quiz_id: str, not_open_status: int = status.HTTP_403_FORBIDDEN) -> Quiz:
         """
         Internal method to read a quiz from database.
         Raises ReadQuizError if quiz is not open.
+        
+        Args:
+            quiz_id: The quiz ID to read
+            not_open_status: HTTP status code to use when quiz is not open (default: 403)
         """
 
         quiz = self.quiz_repository.read(quiz_id)
 
         # Check if quiz is open
         if not quiz.is_open:
-            raise ReadQuizError("Quiz is not open", http_status=status.HTTP_403_FORBIDDEN)
+            raise ReadQuizError("Quiz is not open", http_status=not_open_status)
 
         return quiz
 
@@ -138,13 +142,13 @@ class QuizService:
         Returns tuple of (score, max_score).
 
         Validations:
-        - Quiz must be open
+        - Quiz must be open (returns 423 if not open)
         - User must not have already submitted
         - Answer list length must match question count
         - Timer must not have expired (with backoff grace period)
         """
-        # Read quiz and run all validations
-        quiz = self._read_quiz(quiz_id)
+        # Read quiz and run all validations (use 423 for not open during submit)
+        quiz = self._read_quiz(quiz_id, not_open_status=status.HTTP_423_LOCKED)
         self._validate_submission(user_id, quiz_id)
         self._validate_answers(answer_list, quiz)
         current_time = self._validate_timer(user_id, quiz_id, quiz)

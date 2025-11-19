@@ -18,10 +18,13 @@ router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "Quiz submitted successfully, score calculated"},
-        400: {"description": "Bad request - Quiz already submitted, invalid answer list, or missing start time"},
+        400: {"description": "Bad request - Invalid answer list or missing start time"},
         401: {"description": "Unauthorized - Invalid or expired token"},
-        403: {"description": "Forbidden - Quiz not open, time expired, user not checked in, or insufficient privileges"},
-        404: {"description": "Not found - Quiz not found"},
+        403: {"description": "Forbidden - User not checked in or insufficient privileges"},
+        404: {"description": "Not found - Quiz not found or start time not found"},
+        408: {"description": "Request Timeout - Quiz time expired"},
+        409: {"description": "Conflict - Quiz already submitted"},
+        423: {"description": "Locked - Quiz is not open"},
         500: {"description": "Internal server error"},
     },
 )

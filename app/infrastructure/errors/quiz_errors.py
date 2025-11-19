@@ -27,13 +27,13 @@ class UpdateQuizError(BaseError):
 
 class QuizAlreadySubmittedError(BaseError):
     """Raised when user tries to submit a quiz they already submitted"""
-    def __init__(self, message: str = "Quiz already submitted", http_status: int = 400):
+    def __init__(self, message: str = "Quiz already submitted", http_status: int = 409):
         super().__init__(message, status_code=http_status)
 
 
 class QuizTimeUpError(BaseError):
     """Raised when quiz time has expired"""
-    def __init__(self, message: str = "Quiz time is up", http_status: int = 403):
+    def __init__(self, message: str = "Quiz time is up", http_status: int = 408):
         super().__init__(message, status_code=http_status)
 
 
