@@ -1,4 +1,5 @@
 import time
+import uuid
 from typing import Optional
 
 from domain.entities.quiz import Quiz
