@@ -6,3 +6,4 @@ pydantic-settings
 firebase-admin
 google-cloud-firestore
 httpx
+cachetools
