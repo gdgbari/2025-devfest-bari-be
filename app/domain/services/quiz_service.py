@@ -6,18 +6,20 @@ from domain.entities.quiz import Quiz
 from domain.entities.quiz_result import QuizResult
 from domain.entities.quiz_start_time import QuizStartTime
 from fastapi import status
-from infrastructure.errors.quiz_errors import (InvalidAnswerListError,
-                                               QuizAlreadySubmittedError,
-                                               QuizStartTimeNotFoundError,
-                                               QuizTimeUpError, ReadQuizError)
+from infrastructure.errors.quiz_errors import (
+    InvalidAnswerListError,
+    QuizAlreadySubmittedError,
+    QuizStartTimeNotFoundError,
+    QuizTimeUpError,
+    ReadQuizError,
+)
 from infrastructure.repositories.config_repository import ConfigRepository
-from infrastructure.repositories.leaderboard_repository import \
-    LeaderboardRepository
+from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
-DEFAULT_TIMER_DURATION_MS = 3 * 60 * 1000  # 3 minutes in milliseconds
+DEFAULT_TIME_PER_QUESTION_MS = 60 * 1000  # 1 minute in milliseconds
 
 
 class QuizService:
@@ -30,7 +32,7 @@ class QuizService:
         quiz_repository: QuizRepository,
         user_repository: UserRepository,
         leaderboard_repository: LeaderboardRepository,
-        config_repository: ConfigRepository
+        config_repository: ConfigRepository,
     ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
@@ -43,16 +45,20 @@ class QuizService:
         Timer duration is read from remote_config, defaulting to 3 minutes if not set.
         Generates unique question_id for each question.
         """
-        # Get timer_duration from config or use default
+        # Get time_per_question from config or use default
         try:
             config = self.config_repository.read_config()
-            timer_duration = config.timer_duration if config.timer_duration is not None else DEFAULT_TIMER_DURATION_MS
+            time_per_question = (
+                config.time_per_question
+                if config.time_per_question is not None
+                else DEFAULT_TIME_PER_QUESTION_MS
+            )
         except Exception:
             # If config read fails, use default
-            timer_duration = DEFAULT_TIMER_DURATION_MS
+            time_per_question = DEFAULT_TIME_PER_QUESTION_MS
 
-        # Set timer_duration on quiz
-        quiz.timer_duration = timer_duration
+        # Calculate timer_duration based on number of questions
+        quiz.timer_duration = len(quiz.question_list) * time_per_question
 
         # Generate unique question_id for each question
         for question in quiz.question_list:
@@ -61,11 +67,13 @@ class QuizService:
 
         return self.quiz_repository.create(quiz)
 
-    def _read_quiz(self, quiz_id: str, not_open_status: int = status.HTTP_403_FORBIDDEN) -> Quiz:
+    def _read_quiz(
+        self, quiz_id: str, not_open_status: int = status.HTTP_403_FORBIDDEN
+    ) -> Quiz:
         """
         Internal method to read a quiz from database.
         Raises ReadQuizError if quiz is not open.
-        
+
         Args:
             quiz_id: The quiz ID to read
             not_open_status: HTTP status code to use when quiz is not open (default: 403)
@@ -128,7 +136,7 @@ class QuizService:
             elapsed_time = current_time - start_time.started_at
             remaining_time = quiz.timer_duration - elapsed_time
             quiz.timer_duration = remaining_time if remaining_time > 0 else 0
-            
+
             # Check if time has expired
             if quiz.timer_duration == 0:
                 raise QuizTimeUpError("Quiz time has expired")
@@ -137,7 +145,9 @@ class QuizService:
 
         return quiz
 
-    def submit_quiz(self, quiz_id: str, answer_list: list[str], user_id: str) -> tuple[int, int]:
+    def submit_quiz(
+        self, quiz_id: str, answer_list: list[str], user_id: str
+    ) -> tuple[int, int]:
         """
         Checks the submitted answers and calculates score.
         Returns tuple of (score, max_score).
@@ -162,7 +172,7 @@ class QuizService:
             score=score,
             max_score=max_score,
             quiz_title=quiz.title,
-            submitted_at=current_time
+            submitted_at=current_time,
         )
         self.user_repository.save_quiz_result(user_id, quiz_id, result)
 
@@ -190,7 +200,6 @@ class QuizService:
             group_id = user.group.get("gid")
             self.leaderboard_repository.increment_group_score(group_id, score)
 
-
     def _validate_submission(self, user_id: str, quiz_id: str) -> None:
         """
         Validates that the user hasn't already submitted this quiz.
@@ -201,7 +210,6 @@ class QuizService:
         existing_result = self.user_repository.get_quiz_result(user_id, quiz_id)
         if existing_result:
             raise QuizAlreadySubmittedError("You have already submitted this quiz")
-
 
     def _validate_answers(self, answer_list: list[str], quiz: Quiz) -> None:
         """
@@ -215,7 +223,6 @@ class QuizService:
                 f"Answer list length ({len(answer_list)}) must match "
                 f"question count ({len(quiz.question_list)})"
             )
-
 
     def _validate_timer(self, user_id: str, quiz_id: str, quiz: Quiz) -> int:
         """
@@ -242,7 +249,6 @@ class QuizService:
 
         return current_time
 
-
     def _calculate_score(self, quiz: Quiz, answer_list: list[str]) -> tuple[int, int]:
         """
         Calculates the score for a quiz, given a valid quiz and answer list.
@@ -253,7 +259,10 @@ class QuizService:
         for index, question in enumerate(quiz.question_list):
             max_score += question.value
 
-            if index < len(answer_list) and answer_list[index] == question.correct_answer:
+            if (
+                index < len(answer_list)
+                and answer_list[index] == question.correct_answer
+            ):
                 score += question.value
 
         return score, max_score

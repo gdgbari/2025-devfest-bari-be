@@ -11,7 +11,7 @@ class SessionizeClient:
     """
 
     BASE_URL = "https://sessionize.com/api/v2"
-    cache = TTLCache(maxsize=5, ttl=1800)
+    cache = TTLCache(maxsize=5, ttl=600)
 
     def __init__(self):
         self.sessionize_id = settings.sessionize_id
