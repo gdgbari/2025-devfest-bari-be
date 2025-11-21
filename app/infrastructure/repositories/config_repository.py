@@ -18,7 +18,7 @@ class ConfigRepository:
     INFO_CONTENT: str = "info_content"
     WINNER_ROOM: str = "winner_room"
     WINNER_TIME: str = "winner_time"
-    TIMER_DURATION: str = "timer_duration"
+    TIME_PER_QUESTION: str = "time_per_question"
 
     def __init__(self, firestore_client: FirestoreClient):
         self.firestore_client = firestore_client
@@ -35,8 +35,7 @@ class ConfigRepository:
         """
         try:
             config_data = self.firestore_client.read_doc(
-                collection_name=self.CONFIG_COLLECTION,
-                doc_id=self.CONFIG_DOC_ID
+                collection_name=self.CONFIG_COLLECTION, doc_id=self.CONFIG_DOC_ID
             )
 
             return Config(
@@ -46,10 +45,11 @@ class ConfigRepository:
                 info_content=config_data.get(self.INFO_CONTENT),
                 winner_room=config_data.get(self.WINNER_ROOM),
                 winner_time=config_data.get(self.WINNER_TIME),
-                timer_duration=config_data.get(self.TIMER_DURATION)
+                time_per_question=config_data.get(self.TIME_PER_QUESTION),
             )
         except DocumentNotFoundError:
             raise ReadConfigError(message="Configuration not found", http_status=404)
         except Exception as e:
-            raise ReadConfigError(message=f"Failed to read configuration", http_status=500)
-
+            raise ReadConfigError(
+                message=f"Failed to read configuration", http_status=500
+            )
