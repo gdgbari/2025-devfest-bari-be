@@ -118,10 +118,16 @@ class QuizService:
 
         Raises:
             ReadQuizError: if quiz is not open
+            QuizAlreadySubmittedError: if user has already submitted this quiz
             QuizTimeUpError: if timer has expired (timer_duration is 0)
         """
         # Read quiz (checks if open)
         quiz = self._read_quiz(quiz_id)
+
+        # Check if user has already submitted this quiz
+        existing_result = self.user_repository.get_quiz_result(user_id, quiz_id)
+        if existing_result:
+            raise QuizAlreadySubmittedError("You have already submitted this quiz")
 
         # Check if user already has a start time
         start_time = self.user_repository.get_quiz_start_time(user_id, quiz_id)

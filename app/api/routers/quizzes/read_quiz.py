@@ -52,6 +52,7 @@ def read_all_quizzes(
         403: {"description": "Forbidden - Quiz is not open or user not checked in"},
         404: {"description": "Not found - Quiz not found in Firestore"},
         408: {"description": "Request Timeout - Quiz time has expired"},
+        409: {"description": "Conflict - Quiz already submitted"},
         500: {"description": "Internal server error"},
     },
 )
@@ -85,4 +86,3 @@ def read_quiz(
 
     # Convert to response without exposing answers
     return ReadQuizAdapter.to_get_quiz_response(quiz)
-
