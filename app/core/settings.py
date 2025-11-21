@@ -7,9 +7,10 @@ class Settings(BaseSettings):
     port: int = 8080
     debug: bool = False
     version: str = "1.0.0"
+    sessionize_id: str
 
     class Config:
-        env_file = ".env"
+        env_file = "app/.env"
 
 
 settings = Settings()
