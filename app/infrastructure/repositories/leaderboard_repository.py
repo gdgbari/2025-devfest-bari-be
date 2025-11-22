@@ -90,6 +90,7 @@ class LeaderboardRepository:
     def create_group_entry(self, group_id: str, group_name: str, group_color: str) -> None:
         """
         Creates a leaderboard entry for a group if it doesn't already exist.
+        If it exists, updates the updated_at timestamp.
         """
         try:
             # Check if entry already exists
@@ -98,7 +99,15 @@ class LeaderboardRepository:
                     collection_name=self.LEADERBOARD_GROUP_COLLECTION,
                     doc_id=group_id
                 )
-                # Entry exists, skip creation
+                # Entry exists, update updated_at timestamp
+                update_data = {
+                    "updated_at": self._get_timestamp()
+                }
+                self.firestore_client.update_doc(
+                    collection_name=self.LEADERBOARD_GROUP_COLLECTION,
+                    doc_id=group_id,
+                    doc_data=update_data
+                )
                 return
             except DocumentNotFoundError:
                 # Entry doesn't exist, create it
