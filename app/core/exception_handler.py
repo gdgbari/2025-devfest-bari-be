@@ -5,6 +5,7 @@ from infrastructure.errors.auth_errors import *
 from infrastructure.errors.group_errors import *
 from infrastructure.errors.config_errors import *
 from infrastructure.errors.quiz_errors import *
+from infrastructure.errors.tag_errors import *
 
 def register_exception_handlers(app: FastAPI):
     """Register all global exception handlers"""
@@ -113,6 +114,22 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(IncrementScoreError)
     async def increment_score_error_handler(request: Request, exc: IncrementScoreError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(CreateTagError)
+    async def create_tag_error_handler(request: Request, exc: CreateTagError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(ReadTagError)
+    async def read_tag_error_handler(request: Request, exc: ReadTagError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(UpdateTagError)
+    async def update_tag_error_handler(request: Request, exc: UpdateTagError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
+    @app.exception_handler(DeleteTagError)
+    async def delete_tag_error_handler(request: Request, exc: DeleteTagError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     @app.exception_handler(Exception)

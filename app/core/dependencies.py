@@ -18,7 +18,9 @@ from infrastructure.repositories.firestore_repository import \
 from infrastructure.repositories.group_repository import GroupRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
+from infrastructure.repositories.tags_repository import TagsRepository
 from infrastructure.repositories.user_repository import UserRepository
+from domain.services.tag_service import TagService
 
 
 @lru_cache()
@@ -157,3 +159,21 @@ def get_quiz_service(
     return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository)
 
 QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
+
+
+def get_tags_repository(
+    firestore_client: FirestoreClientDep
+) -> TagsRepository:
+    """Dependency to get TagsRepository instance"""
+    return TagsRepository(firestore_client)
+
+TagsRepositoryDep = Annotated[TagsRepository, Depends(get_tags_repository)]
+
+
+def get_tag_service(
+    tags_repository: TagsRepositoryDep
+) -> TagService:
+    """Dependency to get TagService with injected repository"""
+    return TagService(tags_repository)
+
+TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
