@@ -66,12 +66,14 @@ class UserRepository:
 
     def delete(self, uid: str, nickname: str) -> None:
         """
-        Deletes a user from Firebase Auth, then from Firestore.
+        Deletes a user from Firebase Auth, Firestore, and leaderboard.
         Returns None.
         """
         self.firestore_repository.delete_nickname(nickname)
         self.auth_repository.delete_auth(uid)
         self.firestore_repository.delete_user(uid)
+        # Delete leaderboard entry if present
+        self.leaderboard_repository.delete_user_entry(uid)
 
 
     def read(self, uid: str) -> User:
