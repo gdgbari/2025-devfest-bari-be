@@ -4,6 +4,7 @@ from domain.services.user_service import UserService
 from domain.services.config_service import ConfigService
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.errors.config_errors import CheckInNotOpenError
+from infrastructure.errors.auth_errors import ForbiddenError
 
 class CheckInService:
     """"
@@ -30,7 +31,13 @@ class CheckInService:
 
         Raises:
             CheckInNotOpenError: If check-in is currently closed
+            ForbiddenError: If user already has a group assigned
         """
+
+        # Check if user already has a group assigned
+        user = self.user_service.read_user(uid)
+        if user.group is not None:
+            raise ForbiddenError()
 
         # Check if check-in is open
         if not self.config_service.is_check_in_open():
