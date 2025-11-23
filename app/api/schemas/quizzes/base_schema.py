@@ -21,4 +21,5 @@ class QuizBaseSchema(BaseModel):
     """Base quiz schema with common fields"""
     title: str
     question_list: List[QuestionSchema]
+    session_id: str = Field(..., description="Session ID associated with the quiz")
 

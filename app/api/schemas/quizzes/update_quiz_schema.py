@@ -10,6 +10,7 @@ class UpdateQuizRequest(BaseModel):
     title: Optional[str] = None
     question_list: Optional[List[QuestionSchema]] = None
     is_open: Optional[bool] = None
+    session_id: Optional[str] = Field(None, description="Session ID associated with the quiz")
 
 
 class UpdateQuizResponse(QuizBaseSchema):

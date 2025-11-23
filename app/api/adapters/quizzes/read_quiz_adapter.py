@@ -42,6 +42,7 @@ class ReadQuizAdapter:
             title=quiz.title,
             question_list=questions_response,
             timer_duration=quiz.timer_duration,
+            session_id=quiz.session_id
         )
 
     @staticmethod
@@ -73,6 +74,7 @@ class ReadQuizAdapter:
             question_list=questions_response,
             is_open=quiz.is_open,
             timer_duration=quiz.timer_duration,
+            session_id=quiz.session_id
         )
 
     @staticmethod
