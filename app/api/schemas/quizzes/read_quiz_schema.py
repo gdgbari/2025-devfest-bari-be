@@ -31,6 +31,7 @@ class GetQuizResponse(BaseModel):
     title: str
     question_list: List[ReadQuestionSchema]
     timer_duration: int = Field(..., description="Quiz duration in milliseconds")
+    session_id: str = Field(..., description="Session ID associated with the quiz")
 
 
 class GetQuizWithCorrectResponse(BaseModel):
@@ -40,6 +41,7 @@ class GetQuizWithCorrectResponse(BaseModel):
     question_list: List[ReadQuestionWithCorrectSchema]
     is_open: bool
     timer_duration: int = Field(..., description="Quiz duration in milliseconds")
+    session_id: str = Field(..., description="Session ID associated with the quiz")
 
 
 class GetQuizListWithCorrectResponse(BaseModel):

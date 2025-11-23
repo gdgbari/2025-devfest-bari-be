@@ -33,7 +33,8 @@ class CreateQuizAdapter:
             title=request.title,
             question_list=questions,
             is_open=False,  # Always default to False on creation
-            timer_duration=0  # Will be set by service from config
+            timer_duration=0,  # Will be set by service from config
+            session_id=request.session_id
         )
 
     @staticmethod
@@ -57,6 +58,7 @@ class CreateQuizAdapter:
             title=quiz.title,
             question_list=questions_response,
             is_open=quiz.is_open,
-            timer_duration=quiz.timer_duration  # Return in milliseconds
+            timer_duration=quiz.timer_duration,  # Return in milliseconds
+            session_id=quiz.session_id
         )
 

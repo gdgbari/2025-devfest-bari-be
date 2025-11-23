@@ -40,6 +40,9 @@ class UpdateQuizAdapter:
         if request.is_open is not None:
             update_dict["is_open"] = request.is_open
 
+        if request.session_id is not None:
+            update_dict["session_id"] = request.session_id
+
         return update_dict
 
     @staticmethod
@@ -63,6 +66,7 @@ class UpdateQuizAdapter:
             title=quiz.title,
             question_list=questions_response,
             is_open=quiz.is_open,
-            timer_duration=quiz.timer_duration
+            timer_duration=quiz.timer_duration,
+            session_id=quiz.session_id
         )
 
