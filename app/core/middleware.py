@@ -34,9 +34,14 @@ def add_middlewares(app: FastAPI) -> None:
     Args:
         app (FastAPI): The FastAPI application instance.
     """
+    allowed_origins = [
+        "https://bari.devfest.it",
+        "https://app.bari.devfest.it",
+    ]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"] if settings.debug else ["https://bari.devfest.it"],
+        allow_origins=["*"] if settings.debug else allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
