@@ -69,7 +69,7 @@ class QuizRepository:
         Updates a quiz in Firestore.
         """
         try:
-            allowed_fields = {"title", "question_list", "is_open", "session_id"}
+            allowed_fields = {"title", "question_list", "is_open", "session_id", "sessions"}
             update_params = {
                 k: v for k, v in quiz_update.items()
                 if v is not None and k in allowed_fields
