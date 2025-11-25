@@ -13,6 +13,7 @@ class Quiz(BaseModel):
     is_open: bool = False  # Default False
     timer_duration: int = 180000  # Default 3 minutes in milliseconds
     session_id: str
+    sessions: Optional[List[str]] = None  # List of tags like ["session_1", "session_2"]
     quiz_id: Optional[str] = None
 
     @staticmethod
@@ -23,15 +24,19 @@ class Quiz(BaseModel):
             is_open=data.get("is_open", False),
             timer_duration=data.get("timer_duration", 180000),
             session_id=data["session_id"],
+            sessions=data.get("sessions"),  # Can be None
             quiz_id=data.get("quiz_id") if "quiz_id" in data else None
         )
 
     def to_firestore_data(self) -> dict:
-        return {
+        result = {
             "title": self.title,
             "question_list": [q.to_firestore_data() for q in self.question_list],
             "is_open": self.is_open,
             "timer_duration": self.timer_duration,
             "session_id": self.session_id
         }
+        if self.sessions is not None:
+            result["sessions"] = self.sessions
+        return result
 

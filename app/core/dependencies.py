@@ -21,6 +21,8 @@ from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.tags_repository import TagsRepository
 from infrastructure.repositories.user_repository import UserRepository
 from domain.services.tag_service import TagService
+from domain.services.session_service import SessionService
+from infrastructure.clients.sessionize_client import SessionizeClient
 
 
 @lru_cache()
@@ -177,3 +179,20 @@ def get_tag_service(
     return TagService(tags_repository)
 
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
+
+
+def get_sessionize_client() -> SessionizeClient:
+    """Dependency to get SessionizeClient instance"""
+    return SessionizeClient()
+
+SessionizeClientDep = Annotated[SessionizeClient, Depends(get_sessionize_client)]
+
+
+def get_session_service(
+    sessionize_client: SessionizeClientDep,
+    quiz_repository: QuizRepositoryDep
+) -> SessionService:
+    """Dependency to get SessionService with injected clients and repositories"""
+    return SessionService(sessionize_client, quiz_repository)
+
+SessionServiceDep = Annotated[SessionService, Depends(get_session_service)]
