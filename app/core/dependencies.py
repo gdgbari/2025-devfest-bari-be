@@ -160,7 +160,6 @@ def get_quiz_repository(
 QuizRepositoryDep = Annotated[QuizRepository, Depends(get_quiz_repository)]
 
 
-
 def get_sessionize_client() -> SessionizeClient:
     """Dependency to get SessionizeClient instance"""
     return SessionizeClient()
