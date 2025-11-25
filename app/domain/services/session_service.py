@@ -104,6 +104,7 @@ class SessionService:
         """
         Groups sessions by startsAt (discrete time slots) and assigns session_1, session_2, etc. tags
         based on start time and duration.
+        Skips sessions between 12:50 and 14:00 (hardcoded lunch break).
         """
         # Sort all sessions by starts_at
         sorted_sessions = sorted(sessions, key=lambda s: s.starts_at)
@@ -128,17 +129,21 @@ class SessionService:
         # Find the first slot (smallest) to calculate base index
         first_slot = sorted_slots[0] if sorted_slots else 0
 
-        # Assign tags based on slot index and duration
+        # Assign tags based on slot index and duration, skipping session_4 (lunch break)
         for slot_hour in sorted_slots:
-            slot_index = slot_hour - first_slot  # Index relative to first slot
+            slot_index = slot_hour - first_slot
             slot_sessions = grouped_by_slot[slot_hour]
 
             for session in slot_sessions:
-                # Tag starts from session_{slot_index + 1}
-                # If session lasts more than 1 hour, add multiple tags
                 session_tags = []
                 for i in range(session.session_time_units):
                     tag_index = slot_index + i + 1
+                    # Skip session_4 (lunch break between 12:50 and 14:00)
+                    if tag_index == 4:
+                        continue
+                    # Adjust numbering after session_4
+                    if tag_index > 4:
+                        tag_index -= 1
                     session_tags.append(f"session_{tag_index}")
 
                 session.session_tags = session_tags
