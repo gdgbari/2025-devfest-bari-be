@@ -12,11 +12,13 @@ from infrastructure.errors.quiz_errors import (
     QuizStartTimeNotFoundError,
     QuizTimeUpError,
     ReadQuizError,
+    QuizAllSessionsAlreadyCompletedError,
 )
 from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.repositories.tags_repository import TagsRepository
 from domain.services.session_service import SessionService
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
@@ -35,12 +37,14 @@ class QuizService:
         leaderboard_repository: LeaderboardRepository,
         config_repository: ConfigRepository,
         session_service: SessionService,
+        tags_repository: TagsRepository,
     ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
         self.leaderboard_repository = leaderboard_repository
         self.config_repository = config_repository
         self.session_service = session_service
+        self.tags_repository = tags_repository
 
     def create_quiz(self, quiz: Quiz) -> Quiz:
         """
@@ -124,6 +128,7 @@ class QuizService:
             ReadQuizError: if quiz is not open
             QuizAlreadySubmittedError: if user has already submitted this quiz
             QuizTimeUpError: if timer has expired (timer_duration is 0)
+            QuizAllSessionsAlreadyCompletedError: if user already has all quiz sessions
         """
         # Ensure sessions are synced (cached for TTL period)
         await self.session_service.ensure_sessions_synced()
@@ -135,6 +140,9 @@ class QuizService:
         existing_result = self.user_repository.get_quiz_result(user_id, quiz_id)
         if existing_result:
             raise QuizAlreadySubmittedError("You have already submitted this quiz")
+
+        # Check if user already has all quiz sessions
+        self._validate_user_has_new_sessions(user_id, quiz.sessions)
 
         # Check if user already has a start time
         start_time = self.user_repository.get_quiz_start_time(user_id, quiz_id)
@@ -165,6 +173,9 @@ class QuizService:
         Checks the submitted answers and calculates score.
         Returns tuple of (score, max_score).
 
+        Score is multiplied by ratio of new sessions to total sessions.
+        Example: quiz has session_1, session_2; user has session_1 -> score *= 1/2
+
         Validations:
         - Quiz must be open (returns 423 if not open)
         - User must not have already submitted
@@ -177,8 +188,17 @@ class QuizService:
         self._validate_answers(answer_list, quiz)
         current_time = self._validate_timer(user_id, quiz_id, quiz)
 
-        # Calculate score
+        # Calculate base score
         score, max_score = self._calculate_score(quiz, answer_list)
+
+        # Apply session multiplier
+        user_tag_ids = self._get_user_tag_ids(user_id)
+        new_sessions = self._get_new_sessions(user_tag_ids, quiz.sessions)
+        total_sessions = len(quiz.sessions)
+
+        # Calculate multiplier: new_sessions / total_sessions
+        multiplier = len(new_sessions) / total_sessions
+        score = int(score * multiplier)
 
         # Save quiz result
         result = QuizResult(
@@ -192,7 +212,74 @@ class QuizService:
         # Update leaderboard scores atomically
         self._update_leaderboard_scores(user_id, score)
 
+        # Only add new sessions to user tags
+        if new_sessions:
+            self.user_repository.add_tags(user_id, new_sessions)
+
+            # Process only new session tags for points
+            tag_points = self._process_quiz_tags(new_sessions)
+            if tag_points > 0:
+                self._update_leaderboard_scores(user_id, tag_points)
+
         return score, max_score
+
+    def _get_user_tag_ids(self, user_id: str) -> set[str]:
+        """
+        Gets user's tag IDs (documentIds) from Firestore.
+        Returns empty set if user has no tags.
+        """
+        user_data = self.user_repository.read_raw(user_id)
+        tag_ids = user_data.get("tags", [])
+        return set(tag_ids) if tag_ids else set()
+
+    def _get_new_sessions(self, user_tag_ids: set[str], quiz_sessions: list[str]) -> list[str]:
+        """
+        Returns list of quiz sessions that user doesn't already have.
+
+        Args:
+            user_tag_ids: Set of tag IDs user already has
+            quiz_sessions: List of session tag IDs from quiz
+
+        Returns:
+            List of new session tag IDs
+        """
+        return [session for session in quiz_sessions if session not in user_tag_ids]
+
+    def _validate_user_has_new_sessions(self, user_id: str, quiz_sessions: list[str]) -> None:
+        """
+        Validates that user has at least one new session from quiz.
+
+        Raises:
+            QuizAllSessionsAlreadyCompletedError: if user already has all quiz sessions
+        """
+        user_tag_ids = self._get_user_tag_ids(user_id)
+        new_sessions = self._get_new_sessions(user_tag_ids, quiz_sessions)
+
+        if not new_sessions:
+            raise QuizAllSessionsAlreadyCompletedError(
+                "You have already completed all sessions for this quiz"
+            )
+
+    def _process_quiz_tags(self, session_tags: list[str]) -> int:
+        """
+        Reads tags from tags collection using session_tags as documentIds,
+        and returns the sum of all tag points.
+
+        Args:
+            session_tags: List of tag documentIds (e.g., ["session_1", "session_2"])
+
+        Returns:
+            Total points from all tags
+        """
+        total_points = 0
+        for tag_id in session_tags:
+            try:
+                tag = self.tags_repository.read(tag_id)
+                total_points += tag.points
+            except Exception:
+                # If tag doesn't exist, skip it
+                continue
+        return total_points
 
     def _update_leaderboard_scores(self, user_id: str, score: int) -> None:
         """

@@ -116,6 +116,10 @@ def register_exception_handlers(app: FastAPI):
     async def increment_score_error_handler(request: Request, exc: IncrementScoreError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
+    @app.exception_handler(QuizAllSessionsAlreadyCompletedError)
+    async def quiz_all_sessions_already_completed_error_handler(request: Request, exc: QuizAllSessionsAlreadyCompletedError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
     @app.exception_handler(CreateTagError)
     async def create_tag_error_handler(request: Request, exc: CreateTagError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)

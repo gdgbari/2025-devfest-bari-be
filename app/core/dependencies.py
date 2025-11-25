@@ -87,6 +87,14 @@ def get_group_repository(
 
 GroupRepositoryDep = Annotated[GroupRepository, Depends(get_group_repository)]
 
+def get_tags_repository(
+    firestore_client: FirestoreClientDep
+) -> TagsRepository:
+    """Dependency to get TagsRepository instance"""
+    return TagsRepository(firestore_client)
+
+TagsRepositoryDep = Annotated[TagsRepository, Depends(get_tags_repository)]
+
 
 def get_group_service(
     group_repository: GroupRepositoryDep
@@ -99,10 +107,11 @@ GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]
 
 def get_user_service(
     user_repository: UserRepositoryDep,
-    group_service: GroupServiceDep
+    group_service: GroupServiceDep,
+    tags_repository: TagsRepositoryDep
 ) -> UserService:
     """Dependency to get UserService with injected repositories"""
-    return UserService(user_repository, group_service)
+    return UserService(user_repository, group_service, tags_repository)
 
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 
@@ -151,6 +160,7 @@ def get_quiz_repository(
 QuizRepositoryDep = Annotated[QuizRepository, Depends(get_quiz_repository)]
 
 
+
 def get_sessionize_client() -> SessionizeClient:
     """Dependency to get SessionizeClient instance"""
     return SessionizeClient()
@@ -173,21 +183,13 @@ def get_quiz_service(
     user_repository: UserRepositoryDep,
     leaderboard_repository: LeaderboardRepositoryDep,
     config_repository: ConfigRepositoryDep,
-    session_service: SessionServiceDep
+    session_service: SessionServiceDep,
+    tags_repository: TagsRepositoryDep
 ) -> QuizService:
     """Dependency to get QuizService with injected repositories and services"""
-    return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository, session_service)
+    return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository, session_service, tags_repository)
 
 QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
-
-
-def get_tags_repository(
-    firestore_client: FirestoreClientDep
-) -> TagsRepository:
-    """Dependency to get TagsRepository instance"""
-    return TagsRepository(firestore_client)
-
-TagsRepositoryDep = Annotated[TagsRepository, Depends(get_tags_repository)]
 
 
 def get_tag_service(

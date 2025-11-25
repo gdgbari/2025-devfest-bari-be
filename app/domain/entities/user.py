@@ -1,8 +1,9 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from pydantic import BaseModel, EmailStr, field_validator
 
 from domain.entities.role import Role
+from domain.entities.tag import Tag
 
 class User(BaseModel):
     """"
@@ -16,6 +17,7 @@ class User(BaseModel):
     password: Optional[str] = None
     role: Optional[Role] = None
     group: Optional[Dict[str, Any]] = None
+    tags: Optional[List[Tag]] = None  # List of Tag objects
 
     @field_validator("role", mode="before")
     @classmethod
@@ -25,7 +27,11 @@ class User(BaseModel):
         return v
 
     @staticmethod
-    def from_dict(data: dict) -> "User":
+    def from_dict(data: dict, tags: Optional[List[Tag]] = None) -> "User":
+        """
+        Creates User from dict.
+        Tags are passed separately as they need to be loaded from tags collection.
+        """
         return User(
             email=data["email"],
             name=data["name"],
@@ -34,10 +40,15 @@ class User(BaseModel):
             uid=data["uid"] if "uid" in data else None,
             role=data["role"] if "role" in data else None,
             group=data["group"] if "group" in data else None,
+            tags=tags,  # Tags loaded from tags collection
         )
 
     def to_firestore_data(self) -> dict:
-        return {
+        """
+        Converts User to Firestore data.
+        Tags are saved as list of tag_ids (documentIds).
+        """
+        result = {
             "email": self.email,
             "name": self.name,
             "surname": self.surname,
@@ -45,3 +56,9 @@ class User(BaseModel):
             "role": self.role.value,
             "group": self.group
         }
+        if self.tags is not None:
+            # Save tag_ids (documentIds) to Firestore
+            tag_ids = [tag.tag_id for tag in self.tags if tag.tag_id]
+            if tag_ids:
+                result["tags"] = tag_ids
+        return result
