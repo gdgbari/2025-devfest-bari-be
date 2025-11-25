@@ -56,7 +56,7 @@ def read_all_quizzes(
         500: {"description": "Internal server error"},
     },
 )
-def read_quiz(
+async def read_quiz(
     quiz_id: str,
     quiz_service: QuizServiceDep,
     user_token=Depends(verify_id_token),
@@ -73,6 +73,7 @@ def read_quiz(
 
     Only open quizzes can be read by attendees.
     User must be checked in.
+    Sessions are automatically synced before reading (cached for TTL period).
     """
 
     # Check if user has at least attendee role
@@ -82,7 +83,8 @@ def read_quiz(
     check_user_checked_in(user_token, is_checked_in=True)
 
     # Read quiz from database and manage timer (service checks if quiz is open and time is valid)
-    quiz: Quiz = quiz_service.read_quiz(quiz_id, user_token.user_id)
+    # Also ensures sessions are synced before reading
+    quiz: Quiz = await quiz_service.read_quiz(quiz_id, user_token.user_id)
 
     # Convert to response without exposing answers
     return ReadQuizAdapter.to_get_quiz_response(quiz)
