@@ -17,6 +17,7 @@ from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
+from domain.services.session_service import SessionService
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
 DEFAULT_TIME_PER_QUESTION_MS = 60 * 1000  # 1 minute in milliseconds
@@ -33,11 +34,13 @@ class QuizService:
         user_repository: UserRepository,
         leaderboard_repository: LeaderboardRepository,
         config_repository: ConfigRepository,
+        session_service: SessionService,
     ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
         self.leaderboard_repository = leaderboard_repository
         self.config_repository = config_repository
+        self.session_service = session_service
 
     def create_quiz(self, quiz: Quiz) -> Quiz:
         """
@@ -105,9 +108,10 @@ class QuizService:
         """
         self.quiz_repository.delete(quiz_id)
 
-    def read_quiz(self, quiz_id: str, user_id: str) -> Quiz:
+    async def read_quiz(self, quiz_id: str, user_id: str) -> Quiz:
         """
         Read quiz and manage start time for the user.
+        Also ensures sessions are synced before reading.
 
         This method is SAFE against timer resets:
         - First access: creates start_time and begins the countdown, returns full timer_duration
@@ -121,6 +125,9 @@ class QuizService:
             QuizAlreadySubmittedError: if user has already submitted this quiz
             QuizTimeUpError: if timer has expired (timer_duration is 0)
         """
+        # Ensure sessions are synced (cached for TTL period)
+        await self.session_service.ensure_sessions_synced()
+
         # Read quiz (checks if open)
         quiz = self._read_quiz(quiz_id)
 

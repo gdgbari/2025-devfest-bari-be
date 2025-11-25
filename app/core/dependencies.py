@@ -151,14 +151,32 @@ def get_quiz_repository(
 QuizRepositoryDep = Annotated[QuizRepository, Depends(get_quiz_repository)]
 
 
+def get_sessionize_client() -> SessionizeClient:
+    """Dependency to get SessionizeClient instance"""
+    return SessionizeClient()
+
+SessionizeClientDep = Annotated[SessionizeClient, Depends(get_sessionize_client)]
+
+
+def get_session_service(
+    sessionize_client: SessionizeClientDep,
+    quiz_repository: QuizRepositoryDep
+) -> SessionService:
+    """Dependency to get SessionService with injected clients and repositories"""
+    return SessionService(sessionize_client, quiz_repository)
+
+SessionServiceDep = Annotated[SessionService, Depends(get_session_service)]
+
+
 def get_quiz_service(
     quiz_repository: QuizRepositoryDep,
     user_repository: UserRepositoryDep,
     leaderboard_repository: LeaderboardRepositoryDep,
-    config_repository: ConfigRepositoryDep
+    config_repository: ConfigRepositoryDep,
+    session_service: SessionServiceDep
 ) -> QuizService:
-    """Dependency to get QuizService with injected repositories"""
-    return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository)
+    """Dependency to get QuizService with injected repositories and services"""
+    return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository, session_service)
 
 QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
 
@@ -179,20 +197,3 @@ def get_tag_service(
     return TagService(tags_repository)
 
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
-
-
-def get_sessionize_client() -> SessionizeClient:
-    """Dependency to get SessionizeClient instance"""
-    return SessionizeClient()
-
-SessionizeClientDep = Annotated[SessionizeClient, Depends(get_sessionize_client)]
-
-
-def get_session_service(
-    sessionize_client: SessionizeClientDep,
-    quiz_repository: QuizRepositoryDep
-) -> SessionService:
-    """Dependency to get SessionService with injected clients and repositories"""
-    return SessionService(sessionize_client, quiz_repository)
-
-SessionServiceDep = Annotated[SessionService, Depends(get_session_service)]

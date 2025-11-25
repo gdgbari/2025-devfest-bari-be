@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Dict, List
 from math import ceil
 from collections import defaultdict
+import asyncio
+from cachetools import TTLCache
 
 from infrastructure.clients.sessionize_client import SessionizeClient
 from domain.entities.session import Session
@@ -13,6 +15,11 @@ class SessionService:
     Service that syncs Sessionize sessions with quizzes
     """
 
+    # Cache with 10 minutes TTL (600 seconds)
+    SYNC_CACHE_KEY = "sessions_synced"
+    sync_cache = TTLCache(maxsize=1, ttl=600)
+    sync_lock = asyncio.Lock()  # Lock to prevent concurrent syncs
+
     def __init__(
         self,
         sessionize_client: SessionizeClient,
@@ -20,6 +27,27 @@ class SessionService:
     ):
         self.sessionize_client = sessionize_client
         self.quiz_repository = quiz_repository
+
+    async def ensure_sessions_synced(self) -> None:
+        """
+        Ensures sessions are synced with quizzes. Uses cache to avoid repeated syncs.
+        First call triggers sync, subsequent calls within TTL period are cached.
+        """
+        # Check cache first
+        if self.SYNC_CACHE_KEY in self.sync_cache:
+            return  # Already synced recently
+
+        # Acquire lock to prevent concurrent syncs
+        async with self.sync_lock:
+            # Double-check cache after acquiring lock (another request might have synced)
+            if self.SYNC_CACHE_KEY in self.sync_cache:
+                return
+
+            # Perform sync
+            await self.map_sessions_to_quizzes()
+
+            # Mark as synced in cache (TTL automatically handles expiration)
+            self.sync_cache[self.SYNC_CACHE_KEY] = True
 
 
     async def map_sessions_to_quizzes(self) -> List[Session]:
