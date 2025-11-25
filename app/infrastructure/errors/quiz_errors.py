@@ -54,3 +54,9 @@ class IncrementScoreError(BaseError):
     def __init__(self, message: str = "Failed to increment score", http_status: int = 400):
         super().__init__(message, status_code=http_status)
 
+
+class QuizAllSessionsAlreadyCompletedError(BaseError):
+    """Raised when user tries to access a quiz but already has all sessions"""
+    def __init__(self, message: str = "All quiz sessions already completed", http_status: int = 403):
+        super().__init__(message, status_code=http_status)
+

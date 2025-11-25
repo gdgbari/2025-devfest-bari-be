@@ -1,11 +1,13 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from api.schemas.users.base_schema import UserBaseSchema
+from api.schemas.tags.read_tag_schema import GetTagResponse
 
 from pydantic import BaseModel
 
 class GetUserResponse(UserBaseSchema):
     uid: str
     group: Optional[Dict[str, Any]] = None
+    tags: Optional[List[GetTagResponse]] = None
 
 
 class GetUserListResponse(BaseModel):

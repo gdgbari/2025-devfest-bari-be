@@ -249,6 +249,23 @@ class FirestoreRepository:
         except Exception as e:
             raise UpdateUserError(message=f"Failed to assign group", http_status=400)
 
+    def add_tags_to_user(self, uid: str, tags: list[str]) -> None:
+        """
+        Adds tags to user's tags list using Firestore arrayUnion.
+        If tags field doesn't exist, it will be created.
+        """
+        try:
+            from firebase_admin import firestore
+
+            doc_ref = self.firestore_client.db.collection(self.USERS_COLLECTION).document(uid)
+            doc_ref.update({
+                "tags": firestore.ArrayUnion(tags)
+            })
+        except DocumentNotFoundError:
+            raise UpdateUserError(message=f"User was not found", http_status=404)
+        except Exception:
+            raise UpdateUserError(message=f"Failed to add tags to user", http_status=400)
+
 
     def read_from_subcollection(
         self,

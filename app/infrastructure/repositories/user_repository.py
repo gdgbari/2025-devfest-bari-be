@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from infrastructure.repositories.firebase_auth_repository import FirebaseAuthRepository
 from infrastructure.repositories.firestore_repository import FirestoreRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
@@ -79,16 +79,31 @@ class UserRepository:
     def read(self, uid: str) -> User:
         """
         Reads a user from Firestore and returns it as a response schema.
+        Note: Tags are not loaded. Use UserService.read_user() to get tags.
         """
-        return User.from_dict(self.firestore_repository.read_user(uid))
+        return User.from_dict(self.firestore_repository.read_user(uid), tags=None)
 
+    def read_raw(self, uid: str) -> dict:
+        """
+        Reads a user from Firestore and returns raw dict.
+        Used when tags need to be loaded separately.
+        """
+        return self.firestore_repository.read_user(uid)
 
     def read_all(self) -> list[User]:
         """
         Reads all users from Firestore and returns them as a list of response schemas.
+        Note: Tags are not loaded. Use UserService.read_all_users() to get tags.
         """
         users: list[dict] = self.firestore_repository.read_all_users()
-        return [User.from_dict(user) for user in users]
+        return [User.from_dict(user, tags=None) for user in users]
+
+    def read_all_raw(self) -> list[dict]:
+        """
+        Reads all users from Firestore and returns raw dicts.
+        Used when tags need to be loaded separately.
+        """
+        return self.firestore_repository.read_all_users()
 
 
     def update(self, user_update: dict, current_user: User) -> User:
@@ -122,6 +137,14 @@ class UserRepository:
         self.firestore_repository.assign_group_to_user(uid, gid)
         self.auth_repository.update_custom_claims(uid=uid, claims={"checked_in": True})
 
+        return self.read(uid)
+
+    def add_tags(self, uid: str, tags: List[str]) -> User:
+        """
+        Adds tags to user's tags list.
+        Returns updated user.
+        """
+        self.firestore_repository.add_tags_to_user(uid, tags)
         return self.read(uid)
 
 
