@@ -24,3 +24,9 @@ class DeleteTagError(BaseError):
     def __init__(self, message: str, http_status: int):
         super().__init__(message, status_code=http_status)
 
+
+class AssignTagError(BaseError):
+    """Raised during tag assignment"""
+    def __init__(self, message: str, http_status: int):
+        super().__init__(message, status_code=http_status)
+

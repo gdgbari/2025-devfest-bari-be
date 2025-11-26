@@ -136,6 +136,10 @@ def register_exception_handlers(app: FastAPI):
     async def delete_tag_error_handler(request: Request, exc: DeleteTagError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
+    @app.exception_handler(AssignTagError)
+    async def assign_tag_error_handler(request: Request, exc: AssignTagError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
         raise HTTPException(status_code=500, detail="Internal server error")

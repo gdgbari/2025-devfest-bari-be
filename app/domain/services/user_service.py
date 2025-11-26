@@ -80,6 +80,14 @@ class UserService:
         self.user_repository.assign_group(uid, gid)
         return self.read_user(uid)
 
+    def add_tags(self, uid: str, tags: List[str]) -> User:
+        """
+        Adds tags to user's tags list.
+        Returns updated user with tags loaded.
+        """
+        self.user_repository.add_tags(uid, tags)
+        return self.read_user(uid)
+
     def _load_user_tags(self, tag_ids: Optional[List[str]]) -> Optional[List[Tag]]:
         """
         Loads Tag objects from tags collection using tag_ids.

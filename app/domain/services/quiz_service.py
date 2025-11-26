@@ -15,11 +15,11 @@ from infrastructure.errors.quiz_errors import (
     QuizAllSessionsAlreadyCompletedError,
 )
 from infrastructure.repositories.config_repository import ConfigRepository
-from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.user_repository import UserRepository
 from infrastructure.repositories.tags_repository import TagsRepository
 from domain.services.session_service import SessionService
+from domain.services.leaderboard_service import LeaderboardService
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
 DEFAULT_TIME_PER_QUESTION_MS = 60 * 1000  # 1 minute in milliseconds
@@ -34,14 +34,14 @@ class QuizService:
         self,
         quiz_repository: QuizRepository,
         user_repository: UserRepository,
-        leaderboard_repository: LeaderboardRepository,
+        leaderboard_service: LeaderboardService,
         config_repository: ConfigRepository,
         session_service: SessionService,
         tags_repository: TagsRepository,
     ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
-        self.leaderboard_repository = leaderboard_repository
+        self.leaderboard_service = leaderboard_service
         self.config_repository = config_repository
         self.session_service = session_service
         self.tags_repository = tags_repository
@@ -298,16 +298,8 @@ class QuizService:
             user_id (str): The user's UID
             score (int): The points to add
         """
-        # Read user to get group information
         user = self.user_repository.read(user_id)
-
-        # Increment user score atomically
-        self.leaderboard_repository.increment_user_score(user_id, score)
-
-        # Increment group score atomically if user has a group
-        if user.group and user.group.get("gid"):
-            group_id = user.group.get("gid")
-            self.leaderboard_repository.increment_group_score(group_id, score)
+        self.leaderboard_service.add_points(user, score)
 
     def _validate_submission(self, user_id: str, quiz_id: str) -> None:
         """
