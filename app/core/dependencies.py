@@ -6,6 +6,7 @@ from fastapi import Depends
 from domain.services.check_in_service import CheckInService
 from domain.services.config_service import ConfigService
 from domain.services.group_service import GroupService
+from domain.services.leaderboard_service import LeaderboardService
 from domain.services.quiz_service import QuizService
 from domain.services.user_service import UserService
 from infrastructure.clients.firebase_auth_client import FirebaseAuthClient
@@ -68,6 +69,14 @@ def get_leaderboard_repository(
     return LeaderboardRepository(firestore_client)
 
 LeaderboardRepositoryDep = Annotated[LeaderboardRepository, Depends(get_leaderboard_repository)]
+
+def get_leaderboard_service(
+    leaderboard_repository: LeaderboardRepositoryDep
+) -> LeaderboardService:
+    """Dependency to get LeaderboardService with injected repository"""
+    return LeaderboardService(leaderboard_repository)
+
+LeaderboardServiceDep = Annotated[LeaderboardService, Depends(get_leaderboard_service)]
 
 def get_user_repository(
     auth_repository: AuthRepositoryDep,
@@ -180,21 +189,23 @@ SessionServiceDep = Annotated[SessionService, Depends(get_session_service)]
 def get_quiz_service(
     quiz_repository: QuizRepositoryDep,
     user_repository: UserRepositoryDep,
-    leaderboard_repository: LeaderboardRepositoryDep,
+    leaderboard_service: LeaderboardServiceDep,
     config_repository: ConfigRepositoryDep,
     session_service: SessionServiceDep,
     tags_repository: TagsRepositoryDep
 ) -> QuizService:
     """Dependency to get QuizService with injected repositories and services"""
-    return QuizService(quiz_repository, user_repository, leaderboard_repository, config_repository, session_service, tags_repository)
+    return QuizService(quiz_repository, user_repository, leaderboard_service, config_repository, session_service, tags_repository)
 
 QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
 
 
 def get_tag_service(
-    tags_repository: TagsRepositoryDep
+    tags_repository: TagsRepositoryDep,
+    user_service: UserServiceDep,
+    leaderboard_service: LeaderboardServiceDep
 ) -> TagService:
-    """Dependency to get TagService with injected repository"""
-    return TagService(tags_repository)
+    """Dependency to get TagService with injected repositories and services"""
+    return TagService(tags_repository, user_service, leaderboard_service)
 
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
