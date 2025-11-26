@@ -1,3 +1,4 @@
+import random
 from api.schemas.quizzes.read_quiz_schema import (
     GetQuizResponse,
     GetQuizWithCorrectResponse,
@@ -21,6 +22,7 @@ class ReadQuizAdapter:
         Convert Quiz domain object to GetQuizResponse.
 
         Note: correct_answer is NOT included in the response for security
+        Answer lists are randomized for each question
         """
 
         questions_response = []
@@ -29,6 +31,9 @@ class ReadQuizAdapter:
             answers_response = [
                 ReadAnswerSchema(id=a.id, text=a.text) for a in q.answer_list
             ]
+            # Randomize the order of answers
+            random.shuffle(answers_response)
+
             question_response = ReadQuestionSchema(
                 text=q.text,
                 answer_list=answers_response,
@@ -51,6 +56,7 @@ class ReadQuizAdapter:
         Convert Quiz domain object to GetQuizWithCorrectResponse.
 
         Note: Includes correct_answer - for staff use only
+        Answer lists are randomized for each question
         """
 
         questions_response = []
@@ -59,6 +65,9 @@ class ReadQuizAdapter:
             answers_response = [
                 ReadAnswerSchema(id=a.id, text=a.text) for a in q.answer_list
             ]
+            # Randomize the order of answers
+            random.shuffle(answers_response)
+
             question_response = ReadQuestionWithCorrectSchema(
                 text=q.text,
                 answer_list=answers_response,
