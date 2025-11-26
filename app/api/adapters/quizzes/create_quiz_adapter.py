@@ -25,7 +25,7 @@ class CreateQuizAdapter:
                 text=q_schema.text,
                 answer_list=answers,
                 correct_answer=q_schema.correct_answer,
-                value=q_schema.value
+                value=None # Will be set by service from config
             )
             questions.append(question)
 

@@ -11,7 +11,7 @@ class Question(BaseModel):
     text: str
     answer_list: List[Answer]
     correct_answer: str  # ID of the correct answer
-    value: int = 10  # Default points
+    value: Optional[int] = None  # Default points
     question_id: Optional[str] = None  # Unique identifier for the question
 
     @staticmethod

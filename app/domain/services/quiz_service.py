@@ -23,7 +23,7 @@ from domain.services.session_service import SessionService
 
 BACKOFF_TIME_MS = 30 * 1000  # 30 seconds grace period
 DEFAULT_TIME_PER_QUESTION_MS = 60 * 1000  # 1 minute in milliseconds
-
+DEFAULT_QUIZ_POINTS: int = 300
 
 class QuizService:
     """
@@ -52,7 +52,22 @@ class QuizService:
         Timer duration is read from remote_config, defaulting to 3 minutes if not set.
         Generates unique question_id for each question.
         """
-        # Get time_per_question from config or use default
+        time_per_question, question_value = self._get_config_values(quiz)
+        quiz.timer_duration = len(quiz.question_list) * time_per_question
+
+        # Generate unique question_id for each question
+        # update question value
+        for question in quiz.question_list:
+            if question.question_id is None:
+                question.question_id = str(uuid.uuid4())
+            question.value = question_value
+
+        return self.quiz_repository.create(quiz)
+
+    def _get_config_values(self, quiz: Quiz) -> tuple[int, int]:
+        """
+        Calculates the time per question and the question value from the config.
+        """
         try:
             config = self.config_repository.read_config()
             time_per_question = (
@@ -60,19 +75,13 @@ class QuizService:
                 if config.time_per_question is not None
                 else DEFAULT_TIME_PER_QUESTION_MS
             )
+            quiz_points = config.quiz_points
         except Exception:
-            # If config read fails, use default
+            # If config read fails, use default values
             time_per_question = DEFAULT_TIME_PER_QUESTION_MS
-
-        # Calculate timer_duration based on number of questions
-        quiz.timer_duration = len(quiz.question_list) * time_per_question
-
-        # Generate unique question_id for each question
-        for question in quiz.question_list:
-            if question.question_id is None:
-                question.question_id = str(uuid.uuid4())
-
-        return self.quiz_repository.create(quiz)
+            quiz_points = DEFAULT_QUIZ_POINTS
+        question_value = quiz_points // len(quiz.question_list)
+        return time_per_question, question_value
 
     def _read_quiz(
         self, quiz_id: str, not_open_status: int = status.HTTP_403_FORBIDDEN
