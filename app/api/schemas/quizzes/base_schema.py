@@ -13,7 +13,7 @@ class QuestionSchema(BaseModel):
     text: str
     answer_list: List[AnswerSchema]
     correct_answer: str = Field(..., description="ID of the correct answer")
-    value: int = Field(default=10, description="Points for correct answer")
+    value: Optional[int] = Field(None, description="Points for correct answer")
     question_id: Optional[str] = Field(None, description="Unique identifier for the question")
 
 

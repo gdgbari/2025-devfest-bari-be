@@ -19,6 +19,7 @@ class ConfigRepository:
     WINNER_ROOM: str = "winner_room"
     WINNER_TIME: str = "winner_time"
     TIME_PER_QUESTION: str = "time_per_question"
+    QUIZ_POINTS: str = "quiz_points"
 
     def __init__(self, firestore_client: FirestoreClient):
         self.firestore_client = firestore_client
@@ -46,6 +47,7 @@ class ConfigRepository:
                 winner_room=config_data.get(self.WINNER_ROOM),
                 winner_time=config_data.get(self.WINNER_TIME),
                 time_per_question=config_data.get(self.TIME_PER_QUESTION),
+                quiz_points=config_data.get(self.QUIZ_POINTS),
             )
         except DocumentNotFoundError:
             raise ReadConfigError(message="Configuration not found", http_status=404)
