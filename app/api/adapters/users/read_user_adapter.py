@@ -15,7 +15,7 @@ class ReadUserAdapters:
         tags_response = None
         if user.tags:
             tags_response = [
-                GetTagResponse(tag_id=tag.tag_id, points=tag.points)
+                GetTagResponse(tag_id=tag.tag_id, points=tag.points, secret=tag.secret)
                 for tag in user.tags
                 if tag.tag_id
             ]

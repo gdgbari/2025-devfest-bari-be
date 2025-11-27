@@ -13,6 +13,7 @@ class UpdateTagAdapter:
         """Convert Tag domain object to UpdateTagResponse"""
         return UpdateTagResponse(
             tag_id=tag.tag_id,
-            points=tag.points
+            points=tag.points,
+            secret=tag.secret
         )
 

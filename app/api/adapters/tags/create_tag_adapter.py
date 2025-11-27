@@ -12,7 +12,8 @@ class CreateTagAdapter:
     def to_create_tag_domain(request: CreateTagRequest) -> Tag:
         """Convert CreateTagRequest to Tag domain object"""
         return Tag(
-            points=request.points
+            points=request.points,
+            secret=request.secret
         )
 
     @staticmethod
@@ -20,6 +21,7 @@ class CreateTagAdapter:
         """Convert Tag domain object to CreateTagResponse"""
         return CreateTagResponse(
             tag_id=tag.tag_id,
-            points=tag.points
+            points=tag.points,
+            secret=tag.secret
         )
 

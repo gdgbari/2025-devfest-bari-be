@@ -13,7 +13,8 @@ class ReadTagAdapter:
         """Convert Tag domain object to GetTagResponse"""
         return GetTagResponse(
             tag_id=tag.tag_id,
-            points=tag.points
+            points=tag.points,
+            secret=tag.secret
         )
 
     @staticmethod

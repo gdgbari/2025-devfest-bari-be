@@ -52,13 +52,30 @@ class FirestoreRepository:
             raise CreateUserError(message=f"Failed to create user", http_status=400)
 
 
+    def _normalize_nickname(self, nickname: str) -> str:
+        """
+        Normalizes a nickname for storage in the nicknames collection.
+        Converts to lowercase and removes whitespace.
+
+        Args:
+            nickname: The original nickname
+
+        Returns:
+            Normalized nickname (lowercase, no whitespace)
+        """
+        return nickname.lower().replace(" ", "")
+
     def reserve_nickname(self, nickname: str) -> None:
         """
         Reserves a nickname by creating a document in the Firestore 'nicknames' collection.
 
+        The nickname is normalized (lowercase, no whitespace) for storage in the nicknames
+        collection to ensure uniqueness, but the original nickname is preserved in the users collection.
+
         This method ensures nickname uniqueness across the application by attempting to create
-        a document with the nickname as both the document ID and a field value. Firestore's
-        document ID uniqueness constraint guarantees that no two users can have the same nickname.
+        a document with the normalized nickname as the document ID. Firestore's
+        document ID uniqueness constraint guarantees that no two users can have the same nickname
+        (case-insensitive and ignoring whitespace).
 
         This should be called BEFORE creating the user in Firebase Auth to fail fast if the
         nickname is already taken, preventing orphaned authentication records.
@@ -68,8 +85,9 @@ class FirestoreRepository:
                 - HTTP 409: Nickname is already taken by another user
                 - HTTP 400: Invalid nickname format or other Firestore operation errors
         """
+        normalized_nickname = self._normalize_nickname(nickname)
         try:
-            self.firestore_client.create_doc(self.NICKNAMES_COLLECTION, doc_id=nickname)
+            self.firestore_client.create_doc(self.NICKNAMES_COLLECTION, doc_id=normalized_nickname)
         except Exception as exception:
             if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
                 raise ReserveNicknameError(message=f"Nickname already existing", http_status=409)
@@ -186,6 +204,9 @@ class FirestoreRepository:
         """
         Deletes a nickname reservation from the Firestore 'nicknames' collection.
 
+        The nickname is normalized (lowercase, no whitespace) before deletion to match
+        the format used when reserving the nickname.
+
         This method removes a nickname document from Firestore, making the nickname available
         for future reservation. This is typically called when a user is deleted to free up
         their nickname for reuse.
@@ -195,8 +216,9 @@ class FirestoreRepository:
                 - HTTP 404: Nickname document does not exist in Firestore
                 - HTTP 400: Invalid nickname format or other Firestore operation errors
         """
+        normalized_nickname = self._normalize_nickname(nickname)
         try:
-            self.firestore_client.delete_doc(collection_name=self.NICKNAMES_COLLECTION, doc_id=nickname)
+            self.firestore_client.delete_doc(collection_name=self.NICKNAMES_COLLECTION, doc_id=normalized_nickname)
         except DocumentNotFoundError as e:
             raise DeleteUserError(message=f"Nickname not found", http_status=404)
         except Exception:
