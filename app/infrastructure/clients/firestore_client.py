@@ -27,7 +27,7 @@ class FirestoreClient:
     def __init__(self) -> None:
         """
         Initializes the Firestore client and Firebase app if not already initialized.
-        
+
         In local development: uses service account key file if specified and exists.
         On Cloud Run: uses Application Default Credentials (ADC) automatically provided by GCP.
         """

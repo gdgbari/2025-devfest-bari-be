@@ -7,9 +7,20 @@ class AssignTagRequest(BaseModel):
     uid: str = Field(..., description="User ID to assign the tag to")
 
 
+class AssignTagBySecretRequest(BaseModel):
+    """Request schema for assigning a tag to a user by secret"""
+    secret: str = Field(..., description="Secret string to redeem the tag")
+    uid: str = Field(..., description="User ID to assign the tag to")
+
+
 class AssignTagResponse(BaseModel):
     """Response schema for assigning a tag to a user"""
     tag_id: str
     user_id: str
     points: int
 
+class AssignTagBySecretResponse(BaseModel):
+    """Response schema for assigning a tag to a user by secret"""
+    secret: str
+    user_id: str
+    points: int
