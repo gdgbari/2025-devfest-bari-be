@@ -277,10 +277,13 @@ class QuizService:
         # Calculate multiplier: number of new slots
         multiplier = len(new_slots)
 
+        score *= multiplier
+        max_score *= multiplier
+
         # Save quiz result
         result = QuizResult(
-            score=score*multiplier,
-            max_score=max_score*multiplier,
+            score=score,
+            max_score=max_score,
             quiz_title=quiz.title,
             submitted_at=current_time,
         )
