@@ -71,7 +71,7 @@ def assign_tag_by_secret(
     and updates leaderboard scores.
     """
     # Get the user ID from the authenticated token
-    uid = user_token.get("uid")
+    uid = user_token.uid
 
     # Redeem tag by secret for the logged-in user
     points = tag_service.assign_tag_by_secret(request.secret, uid)

@@ -28,7 +28,7 @@ router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
         500: {"description": "Internal server error"},
     },
 )
-def submit_quiz(
+async def submit_quiz(
     quiz_id: str,
     request: SubmitQuizRequest,
     quiz_service: QuizServiceDep,
@@ -56,7 +56,7 @@ def submit_quiz(
     answers_dict = {item.question_id: item.answer_id for item in request.answers}
 
     # Submit quiz and calculate score
-    score, max_score = quiz_service.submit_quiz(
+    score, max_score = await quiz_service.submit_quiz(
         quiz_id,
         answers_dict,
         user_token.user_id

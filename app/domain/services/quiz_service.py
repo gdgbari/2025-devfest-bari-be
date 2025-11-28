@@ -212,7 +212,7 @@ class QuizService:
         
         return quiz
 
-    def submit_quiz(
+    async def submit_quiz(
         self, quiz_id: str, answers: dict[str, str], user_id: str
     ) -> tuple[int, int]:
         """
@@ -241,6 +241,7 @@ class QuizService:
         # Apply session multiplier
         # 1. Get slots for current session
         current_session_slots = self.session_service.get_slots_for_session(quiz.session_id)
+        print(f"DEBUG: Session {quiz.session_id} slots: {len(current_session_slots)}")
         
         # 2. Get slots for all completed quizzes
         completed_quiz_ids = self.user_repository.get_completed_quiz_ids(user_id)
@@ -258,6 +259,8 @@ class QuizService:
                 s_slots = self.session_service.get_slots_for_session(s_id)
                 for slot in s_slots:
                     completed_slots.add(slot)
+        
+        print(f"DEBUG: Completed slots: {len(completed_slots)}")
                     
         # 3. Filter current slots excluding those in completed slots
         # We use string representation or tuple for comparison if Slot is not hashable/comparable directly
@@ -269,14 +272,15 @@ class QuizService:
             if slot not in completed_slots:
                 new_slots.append(slot)
 
+        print(f"DEBUG: New slots: {len(new_slots)}")
+
         # Calculate multiplier: number of new slots
         multiplier = len(new_slots)
-        score = int(score * multiplier)
 
         # Save quiz result
         result = QuizResult(
-            score=score,
-            max_score=max_score,
+            score=score*multiplier,
+            max_score=max_score*multiplier,
             quiz_title=quiz.title,
             submitted_at=current_time,
         )
