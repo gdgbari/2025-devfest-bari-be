@@ -30,7 +30,6 @@ class UpdateQuizAdapter:
                     text=q_schema.text,
                     answer_list=answers,
                     correct_answer=q_schema.correct_answer,
-                    value=q_schema.value,
                     question_id=q_schema.question_id
                 )
                 questions.append(question)
