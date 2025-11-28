@@ -52,21 +52,25 @@ class QuizService:
         Timer duration is read from remote_config, defaulting to 3 minutes if not set.
         Generates unique question_id for each question.
         """
-        time_per_question, question_value = self._get_config_values(quiz)
-        quiz.timer_duration = len(quiz.question_list) * time_per_question
+        num_questions = len(quiz.question_list)
+        time_per_question, total_points = self._get_quiz_config()
+
+        quiz.timer_duration = num_questions * time_per_question
 
         # Generate unique question_id for each question
         # update question value
-        for question in quiz.question_list:
+        point_values = self._distribute_points(num_questions, total_points)
+
+        for i, question in enumerate(quiz.question_list):
             if question.question_id is None:
                 question.question_id = str(uuid.uuid4())
-            question.value = question_value
+            question.value = point_values[i]
 
         return self.quiz_repository.create(quiz)
 
-    def _get_config_values(self, quiz: Quiz) -> tuple[int, int]:
+    def _get_quiz_config(self) -> tuple[int, int]:
         """
-        Calculates the time per question and the question value from the config.
+        Reads config and returns (time_per_question, total_quiz_points).
         """
         try:
             config = self.config_repository.read_config()
@@ -80,8 +84,27 @@ class QuizService:
             # If config read fails, use default values
             time_per_question = DEFAULT_TIME_PER_QUESTION_MS
             quiz_points = DEFAULT_QUIZ_POINTS
-        question_value = quiz_points // len(quiz.question_list)
-        return time_per_question, question_value
+        return time_per_question, quiz_points
+
+    def _distribute_points(self, num_questions: int, total_points: int) -> list[int]:
+        """
+        Distributes total points among questions.
+        If division is not perfect, distributes remainder to first questions.
+        """
+        if num_questions <= 0:
+            return []
+
+        base_value = total_points // num_questions
+        remainder = total_points % num_questions
+
+        points = []
+        for i in range(num_questions):
+            value = base_value
+            if i < remainder:
+                value += 1
+            points.append(value)
+
+        return points
 
     def _read_quiz(
         self, quiz_id: str, not_open_status: int = status.HTTP_403_FORBIDDEN
@@ -112,7 +135,28 @@ class QuizService:
     def update_quiz(self, quiz_id: str, quiz_update: dict) -> Quiz:
         """
         Updates a quiz in database.
+        Recalculates scores and timer if question_list is modified.
         """
+        if "question_list" in quiz_update:
+            questions_data = quiz_update["question_list"]
+            num_questions = len(questions_data)
+
+            time_per_question, total_points = self._get_quiz_config()
+
+            # Update timer duration
+            quiz_update["timer_duration"] = num_questions * time_per_question
+
+            point_values = self._distribute_points(num_questions, total_points)
+
+            # Update each question
+            for i, question_data in enumerate(questions_data):
+                question_data["value"] = point_values[i]
+                if (
+                    "question_id" not in question_data
+                    or not question_data["question_id"]
+                ):
+                    question_data["question_id"] = str(uuid.uuid4())
+
         return self.quiz_repository.update(quiz_id, quiz_update)
 
     def delete_quiz(self, quiz_id: str) -> None:

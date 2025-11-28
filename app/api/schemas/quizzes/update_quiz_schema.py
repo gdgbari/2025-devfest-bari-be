@@ -9,7 +9,6 @@ class UpdateQuestionSchema(BaseModel):
     text: str
     answer_list: List[AnswerSchema]
     correct_answer: str = Field(..., description="ID of the correct answer")
-    value: int = Field(..., description="Points for correct answer")
     question_id: Optional[str] = Field(None, description="Unique identifier for the question")
 
 
