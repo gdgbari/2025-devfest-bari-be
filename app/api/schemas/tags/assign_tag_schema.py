@@ -10,7 +10,6 @@ class AssignTagRequest(BaseModel):
 class AssignTagBySecretRequest(BaseModel):
     """Request schema for assigning a tag to a user by secret"""
     secret: str = Field(..., description="Secret string to redeem the tag")
-    uid: str = Field(..., description="User ID to assign the tag to")
 
 
 class AssignTagResponse(BaseModel):

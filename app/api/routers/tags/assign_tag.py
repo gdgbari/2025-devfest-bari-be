@@ -48,14 +48,13 @@ def assign_tag(
 
 @router.post(
     "/assign-secret",
-    description="Assign a tag to a user by secret",
+    description="Assign a tag to the logged-in user by secret",
     response_model=AssignTagBySecretResponse,
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "Tag redeemed and assigned successfully"},
         400: {"description": "Bad request - Invalid secret, multiple tags found, or user data"},
         401: {"description": "Unauthorized - Invalid or expired token"},
-        403: {"description": "Forbidden - Insufficient privileges"},
         404: {"description": "Not found - Tag with provided secret not found"},
         409: {"description": "Conflict - Tag already assigned to user"},
         500: {"description": "Internal server error"},
@@ -67,15 +66,15 @@ def assign_tag_by_secret(
     user_token=Depends(verify_id_token),
 ) -> AssignTagResponse:
     """
-    Assign a tag to a user by secret.
+    Assign a tag to the logged-in user by secret.
     Finds the tag by secret (using read_all and filtering), adds it to user's tags list
     and updates leaderboard scores.
     """
-    # Check if user has staff role
-    check_user_role(user_token)
+    # Get the user ID from the authenticated token
+    uid = user_token.get("uid")
 
-    # Redeem tag by secret
-    points = tag_service.assign_tag_by_secret(request.secret, request.uid)
+    # Redeem tag by secret for the logged-in user
+    points = tag_service.assign_tag_by_secret(request.secret, uid)
 
-    return AssignTagAdapter.to_assign_tag_by_secret_response(request.secret, request.uid, points)
+    return AssignTagAdapter.to_assign_tag_by_secret_response(request.secret, uid, points)
 
