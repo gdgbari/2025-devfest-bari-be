@@ -224,37 +224,39 @@ class SessionService:
             if s.is_service_session or s.is_plenum_session
         ]
 
+        print("SERVICES", service_sessions)
+
         self._session_slots_map.clear()
         
         all_generated_slots = set()
 
-        current = min(s.starts_at for s in sessions)
-        max_ends_at = max(s.ends_at for s in sessions)
 
-       # Generate slots within the session duration
-        while current + min_duration < max_ends_at:
-            slot = Slot(start=current, end=current + min_duration)
-            
-            # Check if slot overlaps with ANY service session
-            service_session_ptr = None
-            for ss in service_sessions:
-                if slot.start < ss.ends_at or slot.end > ss.starts_at:
-                    service_session_ptr = ss
-                    break
-
-            if not service_session_ptr:
-                all_generated_slots.add(slot)    
-                current += min_duration
-            else:
-                current = service_session_ptr.ends_at
-
-        for session in sessions:
-            if session.is_service_session or session.is_plenum_session:
-                continue
-            session_slots = [s for s in all_generated_slots if s.start >= session.starts_at and s.end <= session.ends_at]
-            self._session_slots_map[session.id] = session_slots
+        for session in non_service_sessions:            
+            session_slots = []
             current = session.starts_at
             
+            # Generate slots within the session duration
+            while current + min_duration <= session.ends_at:
+                slot = Slot(start=current, end=current + min_duration)
+                
+                # Check if slot overlaps with ANY service session
+                service_session_ptr = None
+                for ss in service_sessions:
+                    if slot.start < ss.ends_at or slot.end > ss.starts_at:
+                        service_session_ptr = ss
+                        break
+
+                if not service_session_ptr:
+                    session_slots.append(slot)
+                    all_generated_slots.add(slot)    
+                    current += min_duration
+                else:
+                    current = service_session_ptr.ends_at
+            
+            if session_slots:
+                self._session_slots_map[session.id] = session_slots
+                print(f"DEBUG: Mapped {len(session_slots)} slots to session {session.id} ({session.starts_at} - {session.ends_at})")
+
         print(f"DEBUG: Total unique slots generated: {len(all_generated_slots)}")
         for slot in sorted(list(all_generated_slots), key=lambda s: s.start):
             print(f"DEBUG: Slot: {slot}")
