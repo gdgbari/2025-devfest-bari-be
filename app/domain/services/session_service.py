@@ -242,7 +242,7 @@ class SessionService:
                 # Check if slot overlaps with ANY service session
                 service_session_ptr = None
                 for ss in service_sessions:
-                    if slot.start < ss.ends_at or slot.end > ss.starts_at:
+                    if slot.start < ss.ends_at and slot.end > ss.starts_at:
                         service_session_ptr = ss
                         break
 
