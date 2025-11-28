@@ -1,3 +1,4 @@
+import secrets
 from domain.entities.tag import Tag
 from infrastructure.repositories.tags_repository import TagsRepository
 from domain.services.user_service import UserService
@@ -23,8 +24,19 @@ class TagService:
     def create_tag(self, tag: Tag) -> Tag:
         """
         Creates a tag in database.
+        The secret is ALWAYS auto-generated and cannot be specified by the user.
         """
-        return self.tags_repository.create(tag, tag.tag_id)
+        # Generate a 32-character hex string
+        generated_secret = secrets.token_hex(16)
+        
+        # Create a new tag object with the generated secret
+        tag_with_secret = Tag(
+            tag_id=tag.tag_id,
+            points=tag.points,
+            secret=generated_secret
+        )
+        
+        return self.tags_repository.create(tag_with_secret, tag_with_secret.tag_id)
 
     def read_tag(self, tag_id: str) -> Tag:
         """

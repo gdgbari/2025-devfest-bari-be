@@ -1,10 +1,10 @@
-from api.schemas.tags.base_schema import TagBaseSchema
+from api.schemas.tags.base_schema import TagBaseSchemaWithSecret
 from pydantic import BaseModel
 
 
-class GetTagResponse(TagBaseSchema):
+class GetTagResponse(TagBaseSchemaWithSecret):
     """Response schema for getting a tag"""
-    tag_id: str
+    pass
 
 
 class GetTagListResponse(BaseModel):

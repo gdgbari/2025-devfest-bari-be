@@ -1,13 +1,12 @@
-from typing import Optional
-from api.schemas.tags.base_schema import TagBaseSchema
+from api.schemas.tags.base_schema import TagBaseSchema, TagBaseSchemaWithSecret
 
 
 class CreateTagRequest(TagBaseSchema):
     """Request schema for creating a tag"""
-    tag_id: str
+    pass
 
 
-class CreateTagResponse(TagBaseSchema):
+class CreateTagResponse(TagBaseSchemaWithSecret):
     """Response schema after creating a tag"""
-    tag_id: str
+    pass
 
