@@ -13,7 +13,8 @@ class CreateTagAdapter:
         """Convert CreateTagRequest to Tag domain object"""
         return Tag(
             points=request.points,
-            secret=request.secret
+            secret=request.secret,
+            tag_id=request.tag_id
         )
 
     @staticmethod

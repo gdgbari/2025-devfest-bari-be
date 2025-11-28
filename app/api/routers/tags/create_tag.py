@@ -35,8 +35,7 @@ def create_tag(
 
     # Convert request to domain object and create tag
     new_tag: Tag = tag_service.create_tag(
-        CreateTagAdapter.to_create_tag_domain(request),
-        tag_id=request.tag_id
+        CreateTagAdapter.to_create_tag_domain(request)
     )
 
     return CreateTagAdapter.to_create_tag_response(new_tag)

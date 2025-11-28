@@ -20,11 +20,11 @@ class TagService:
         self.user_service = user_service
         self.leaderboard_service = leaderboard_service
 
-    def create_tag(self, tag: Tag, tag_id: str = None) -> Tag:
+    def create_tag(self, tag: Tag) -> Tag:
         """
         Creates a tag in database.
         """
-        return self.tags_repository.create(tag, tag_id)
+        return self.tags_repository.create(tag, tag.tag_id)
 
     def read_tag(self, tag_id: str) -> Tag:
         """
