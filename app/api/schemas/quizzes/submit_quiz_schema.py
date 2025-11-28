@@ -2,9 +2,14 @@ from pydantic import BaseModel, Field
 from typing import List
 
 
+class QuizAnswer(BaseModel):
+    question_id: str = Field(..., description="The ID of the question")
+    answer_id: str = Field(..., description="The ID of the selected answer")
+
+
 class SubmitQuizRequest(BaseModel):
     """Request schema for submitting quiz answers"""
-    answer_list: List[str] = Field(..., description="List of answer IDs selected by the user")
+    answers: List[QuizAnswer] = Field(..., description="List of answers")
 
 
 class SubmitQuizResponse(BaseModel):

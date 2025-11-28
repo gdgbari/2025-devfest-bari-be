@@ -9,10 +9,8 @@ from fastapi import status
 from infrastructure.errors.quiz_errors import (
     InvalidAnswerListError,
     QuizAlreadySubmittedError,
-    QuizStartTimeNotFoundError,
     QuizTimeUpError,
     ReadQuizError,
-    QuizAllSessionsAlreadyCompletedError,
 )
 from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
@@ -37,14 +35,12 @@ class QuizService:
         leaderboard_service: LeaderboardService,
         config_repository: ConfigRepository,
         session_service: SessionService,
-        tags_repository: TagsRepository,
     ):
         self.quiz_repository = quiz_repository
         self.user_repository = user_repository
         self.leaderboard_service = leaderboard_service
         self.config_repository = config_repository
         self.session_service = session_service
-        self.tags_repository = tags_repository
 
     def create_quiz(self, quiz: Quiz) -> Quiz:
         """
@@ -194,8 +190,7 @@ class QuizService:
         if existing_result:
             raise QuizAlreadySubmittedError("You have already submitted this quiz")
 
-        # Check if user already has all quiz sessions
-        self._validate_user_has_new_sessions(user_id, quiz.sessions)
+
 
         # Check if user already has a start time
         start_time = self.user_repository.get_quiz_start_time(user_id, quiz_id)
@@ -214,13 +209,11 @@ class QuizService:
             # Check if time has expired
             if quiz.timer_duration == 0:
                 raise QuizTimeUpError("Quiz time has expired")
-
-        print(quiz)
-
+        
         return quiz
 
     def submit_quiz(
-        self, quiz_id: str, answer_list: list[str], user_id: str
+        self, quiz_id: str, answers: dict[str, str], user_id: str
     ) -> tuple[int, int]:
         """
         Checks the submitted answers and calculates score.
@@ -238,19 +231,46 @@ class QuizService:
         # Read quiz and run all validations (use 423 for not open during submit)
         quiz = self._read_quiz(quiz_id, not_open_status=status.HTTP_423_LOCKED)
         self._validate_submission(user_id, quiz_id)
-        self._validate_answers(answer_list, quiz)
+        self._validate_answers(answers, quiz)
         current_time = self._validate_timer(user_id, quiz_id, quiz)
 
         # Calculate base score
-        score, max_score = self._calculate_score(quiz, answer_list)
+        score, max_score = self._calculate_score(quiz, answers)
 
         # Apply session multiplier
-        user_tag_ids = self._get_user_tag_ids(user_id)
-        new_sessions = self._get_new_sessions(user_tag_ids, quiz.sessions)
-        total_sessions = len(quiz.sessions)
+        # Apply session multiplier
+        # 1. Get slots for current session
+        current_session_slots = self.session_service.get_slots_for_session(quiz.session_id)
+        
+        # 2. Get slots for all completed quizzes
+        completed_quiz_ids = self.user_repository.get_completed_quiz_ids(user_id)
+        
+        # We need to map quiz_id -> session_id to get slots
+        # Optimization: Read all quizzes once (cached in repository or we can read them)
+        # Since we need session_id for each completed quiz
+        all_quizzes = self.quiz_repository.read_all()
+        quiz_session_map = {q.quiz_id: q.session_id for q in all_quizzes}
+        
+        completed_slots = set()
+        for c_quiz_id in completed_quiz_ids:
+            if c_quiz_id in quiz_session_map:
+                s_id = quiz_session_map[c_quiz_id]
+                s_slots = self.session_service.get_slots_for_session(s_id)
+                for slot in s_slots:
+                    completed_slots.add(slot)
+                    
+        # 3. Filter current slots excluding those in completed slots
+        # We use string representation or tuple for comparison if Slot is not hashable/comparable directly
+        # But Slot has __hash__, so we can try direct comparison if it works. 
+        # To be safe, let's compare start and end times.
+        
+        new_slots = []
+        for slot in current_session_slots:
+            if slot not in completed_slots:
+                new_slots.append(slot)
 
-        # Calculate multiplier: new_sessions / total_sessions
-        multiplier = len(new_sessions) / total_sessions
+        # Calculate multiplier: number of new slots
+        multiplier = len(new_slots)
         score = int(score * multiplier)
 
         # Save quiz result
@@ -265,74 +285,9 @@ class QuizService:
         # Update leaderboard scores atomically
         self._update_leaderboard_scores(user_id, score)
 
-        # Only add new sessions to user tags
-        if new_sessions:
-            self.user_repository.add_tags(user_id, new_sessions)
-
-            # Process only new session tags for points
-            tag_points = self._process_quiz_tags(new_sessions)
-            if tag_points > 0:
-                self._update_leaderboard_scores(user_id, tag_points)
-
         return score, max_score
 
-    def _get_user_tag_ids(self, user_id: str) -> set[str]:
-        """
-        Gets user's tag IDs (documentIds) from Firestore.
-        Returns empty set if user has no tags.
-        """
-        user_data = self.user_repository.read_raw(user_id)
-        tag_ids = user_data.get("tags", [])
-        return set(tag_ids) if tag_ids else set()
 
-    def _get_new_sessions(self, user_tag_ids: set[str], quiz_sessions: list[str]) -> list[str]:
-        """
-        Returns list of quiz sessions that user doesn't already have.
-
-        Args:
-            user_tag_ids: Set of tag IDs user already has
-            quiz_sessions: List of session tag IDs from quiz
-
-        Returns:
-            List of new session tag IDs
-        """
-        return [session for session in quiz_sessions if session not in user_tag_ids]
-
-    def _validate_user_has_new_sessions(self, user_id: str, quiz_sessions: list[str]) -> None:
-        """
-        Validates that user has at least one new session from quiz.
-
-        Raises:
-            QuizAllSessionsAlreadyCompletedError: if user already has all quiz sessions
-        """
-        user_tag_ids = self._get_user_tag_ids(user_id)
-        new_sessions = self._get_new_sessions(user_tag_ids, quiz_sessions)
-
-        if not new_sessions:
-            raise QuizAllSessionsAlreadyCompletedError(
-                "You have already completed all sessions for this quiz"
-            )
-
-    def _process_quiz_tags(self, session_tags: list[str]) -> int:
-        """
-        Reads tags from tags collection using session_tags as documentIds,
-        and returns the sum of all tag points.
-
-        Args:
-            session_tags: List of tag documentIds (e.g., ["session_1", "session_2"])
-
-        Returns:
-            Total points from all tags
-        """
-        total_points = 0
-        for tag_id in session_tags:
-            try:
-                tag = self.tags_repository.read(tag_id)
-                total_points += tag.points
-            except Exception:
-                # If tag doesn't exist, skip it
-                continue
-        return total_points
 
     def _update_leaderboard_scores(self, user_id: str, score: int) -> None:
         """
@@ -356,16 +311,16 @@ class QuizService:
         if existing_result:
             raise QuizAlreadySubmittedError("You have already submitted this quiz")
 
-    def _validate_answers(self, answer_list: list[str], quiz: Quiz) -> None:
+    def _validate_answers(self, answers: dict[str, str], quiz: Quiz) -> None:
         """
         Validates that the answer list length matches the question count.
 
         Raises:
             InvalidAnswerListError: if answer list length doesn't match question count
         """
-        if len(answer_list) != len(quiz.question_list):
+        if len(answers) != len(quiz.question_list):
             raise InvalidAnswerListError(
-                f"Answer list length ({len(answer_list)}) must match "
+                f"Answer count ({len(answers)}) must match "
                 f"question count ({len(quiz.question_list)})"
             )
 
@@ -394,19 +349,19 @@ class QuizService:
 
         return current_time
 
-    def _calculate_score(self, quiz: Quiz, answer_list: list[str]) -> tuple[int, int]:
+    def _calculate_score(self, quiz: Quiz, answers: dict[str, str]) -> tuple[int, int]:
         """
         Calculates the score for a quiz, given a valid quiz and answer list.
         """
         score = 0
         max_score = 0
 
-        for index, question in enumerate(quiz.question_list):
+        for question in quiz.question_list:
             max_score += question.value
 
             if (
-                index < len(answer_list)
-                and answer_list[index] == question.correct_answer
+                question.question_id in answers
+                and answers[question.question_id] == question.correct_answer
             ):
                 score += question.value
 

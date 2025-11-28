@@ -164,6 +164,21 @@ class UserRepository:
             return None
 
 
+    def get_completed_quiz_ids(self, uid: str) -> List[str]:
+        """
+        Get list of quiz IDs that the user has completed.
+        """
+        try:
+            results = self.firestore_repository.read_all_from_subcollection(
+                document_id=uid,
+                subcollection=self.QUIZ_RESULTS_COLLECTION
+            )
+            # The document ID in subcollection is the quiz_id
+            return [result["id"] for result in results]
+        except Exception:
+            return []
+
+
     def save_quiz_result(self, uid: str, quiz_id: str, result: QuizResult) -> None:
         """
         Save quiz result to user's quiz_results subcollection.
@@ -202,3 +217,26 @@ class UserRepository:
             subdocument_id=quiz_id,
             data=start_time.to_firestore_data()
         )
+
+
+    def clear_tags(self, uid: str) -> None:
+        """
+        Clears all tags for a user.
+        """
+        try:
+            self.firestore_repository.update_user(uid, {"tags": []})
+        except Exception:
+            # If update fails (e.g. user not found), ignore or log
+            pass
+
+    def clear_quiz_results(self, uid: str) -> None:
+        """
+        Clears all quiz results for a user.
+        """
+        self.firestore_repository.delete_subcollection(uid, self.QUIZ_RESULTS_COLLECTION)
+
+    def clear_quiz_start_times(self, uid: str) -> None:
+        """
+        Clears all quiz start times for a user.
+        """
+        self.firestore_repository.delete_subcollection(uid, self.QUIZ_START_TIMES_COLLECTION)

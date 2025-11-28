@@ -16,5 +16,8 @@ def include_routers(app: FastAPI) -> None:
     api_router.include_router(quiz_router)
     api_router.include_router(sessionize_router)
     api_router.include_router(tags_router)
+    
+    from api.routers.admin.reset_data import router as admin_router
+    api_router.include_router(admin_router)
 
     app.include_router(api_router)

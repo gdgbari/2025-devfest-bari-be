@@ -320,6 +320,25 @@ class FirestoreRepository:
             raise ReadUserError(f"Error reading from subcollection {subcollection}", http_status=400)
 
 
+    def read_all_from_subcollection(
+        self,
+        document_id: str,
+        subcollection: str
+    ) -> list[dict]:
+        """
+        Read all documents from a subcollection.
+        """
+        try:
+            path = f"{self.USERS_COLLECTION}/{document_id}/{subcollection}"
+            return self.firestore_client.read_all_docs(
+                collection_name=path,
+                include_id=True,
+                id_field_name="id"
+            )
+        except Exception as e:
+            raise ReadUserError(f"Error reading all from subcollection {subcollection}", http_status=400)
+
+
     def write_to_subcollection(
         self,
         document_id: str,
@@ -340,3 +359,18 @@ class FirestoreRepository:
             doc_ref.set(data)
         except Exception as e:
             raise CreateUserError(f"Error writing to subcollection", http_status=400)
+
+
+    def delete_subcollection(
+        self,
+        document_id: str,
+        subcollection: str
+    ) -> None:
+        """
+        Deletes all documents in a subcollection.
+        """
+        try:
+            path = f"{self.USERS_COLLECTION}/{document_id}/{subcollection}"
+            self.firestore_client.delete_all_docs(path)
+        except Exception as e:
+            raise DeleteUserError(f"Error deleting subcollection {subcollection}", http_status=400)

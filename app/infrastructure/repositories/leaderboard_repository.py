@@ -163,3 +163,29 @@ class LeaderboardRepository:
         except Exception as e:
             raise IncrementScoreError(f"Failed to increment group score", http_status=400)
 
+
+    def reset_all_scores(self) -> None:
+        """
+        Resets all scores in the leaderboard to 0.
+        """
+        try:
+            # Reset user scores
+            users = self.firestore_client.read_all_docs(self.LEADERBOARD_USER_COLLECTION, include_id=True)
+            for user in users:
+                self.firestore_client.update_doc(
+                    self.LEADERBOARD_USER_COLLECTION,
+                    user["id"],
+                    {"score": 0, "updated_at": self._get_timestamp()}
+                )
+
+            # Reset group scores
+            groups = self.firestore_client.read_all_docs(self.LEADERBOARD_GROUP_COLLECTION, include_id=True)
+            for group in groups:
+                self.firestore_client.update_doc(
+                    self.LEADERBOARD_GROUP_COLLECTION,
+                    group["id"],
+                    {"score": 0, "updated_at": self._get_timestamp()}
+                )
+        except Exception as e:
+            raise IncrementScoreError(f"Failed to reset scores", http_status=400)
+

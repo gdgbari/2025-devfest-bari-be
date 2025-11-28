@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List
 from math import ceil
 from collections import defaultdict
@@ -7,6 +7,7 @@ from cachetools import TTLCache
 
 from infrastructure.clients.sessionize_client import SessionizeClient
 from domain.entities.session import Session
+from domain.entities.slot import Slot
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.errors.quiz_errors import UpdateQuizError
 
@@ -19,6 +20,8 @@ class SessionService:
     SYNC_CACHE_KEY = "sessions_synced"
     sync_cache = TTLCache(maxsize=1, ttl=600)
     sync_lock = asyncio.Lock()  # Lock to prevent concurrent syncs
+    
+    _session_slots_map: Dict[str, List[Slot]] = {}
 
     def __init__(
         self,
@@ -76,6 +79,9 @@ class SessionService:
 
         # Update quizzes with sessions
         self._update_quizzes_with_sessions(sessions_with_tags)
+
+        # Calculate and map slots
+        self._calculate_and_map_slots(sessions_with_tags)
 
         return sessions_with_tags
 
@@ -164,6 +170,7 @@ class SessionService:
         }
 
         # Update each quiz that has a matching session_id
+        # Update each quiz that has a matching session_id
         for quiz in all_quizzes:
             if quiz.session_id in session_mapping:
                 sessions_tags = session_mapping[quiz.session_id]
@@ -171,3 +178,82 @@ class SessionService:
                     quiz.quiz_id,
                     {"sessions": sessions_tags}
                 )
+
+    def get_slots_for_session(self, session_id: str) -> List[Slot]:
+        """
+        Returns the list of slots associated with a session.
+        """
+        return self._session_slots_map.get(session_id, [])
+
+    def _calculate_and_map_slots(self, sessions: List[Session]):
+        """
+        Calculates slots based on minimum session duration and maps them to sessions.
+        """
+        # 1. Find minimum session duration (excluding service sessions)
+        # We consider service sessions as those marked as is_service_session or is_plenum_session
+        non_service_sessions = [
+            s for s in sessions 
+            if not s.is_service_session and not s.is_plenum_session
+        ]
+        
+        if not non_service_sessions:
+            return
+
+        durations = [(s.ends_at - s.starts_at).total_seconds() for s in non_service_sessions]
+        if not durations:
+            return
+            
+        min_duration_seconds = min(durations)
+        if min_duration_seconds <= 0:
+            return
+            
+        min_duration = timedelta(seconds=min_duration_seconds)
+
+        # 2. Define event start and end
+        all_starts = [s.starts_at for s in sessions]
+        all_ends = [s.ends_at for s in sessions]
+        
+        if not all_starts:
+            return
+
+        event_start = min(all_starts)
+        event_end = max(all_ends)
+
+        # 3. Generate slots
+        slots = []
+        current_time = event_start
+        while current_time + min_duration <= event_end:
+            slot_end = current_time + min_duration
+            slots.append(Slot(start=current_time, end=slot_end))
+            current_time = slot_end
+
+        # 4. Filter out slots in service sessions
+        service_sessions = [
+            s for s in sessions 
+            if s.is_service_session or s.is_plenum_session
+        ]
+        
+        valid_slots = []
+        for slot in slots:
+            is_service = False
+            for ss in service_sessions:
+                # Check if slot overlaps with service session
+                # Overlap if slot.start < ss.end and slot.end > ss.start
+                if slot.start < ss.ends_at and slot.end > ss.starts_at:
+                    is_service = True
+                    break
+            if not is_service:
+                valid_slots.append(slot)
+
+        # 5. Map sessions to slots
+        self._session_slots_map.clear()
+        for session in sessions:
+            session_slots = []
+            for slot in valid_slots:
+                # Check if slot is fully contained within session
+                if slot.start >= session.starts_at and slot.end <= session.ends_at:
+                    session_slots.append(slot)
+            
+            if session_slots:
+                self._session_slots_map[session.id] = session_slots
+

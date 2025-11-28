@@ -52,10 +52,13 @@ def submit_quiz(
     # Check if user has checked in
     check_user_checked_in(user_token, is_checked_in=True)
 
+    # Convert list of answers to dictionary {question_id: answer_id}
+    answers_dict = {item.question_id: item.answer_id for item in request.answers}
+
     # Submit quiz and calculate score
     score, max_score = quiz_service.submit_quiz(
         quiz_id,
-        request.answer_list,
+        answers_dict,
         user_token.user_id
     )
 

@@ -11,6 +11,7 @@ class Session(BaseModel):
     starts_at: datetime
     ends_at: datetime
     is_plenum_session: bool
+    is_service_session: bool
     session_time_units: int  # Amount of hours
     session_tags: List[str]  # List of tags associated with the session
 
@@ -31,6 +32,7 @@ class Session(BaseModel):
             starts_at=starts_at,
             ends_at=ends_at,
             is_plenum_session=data.get("isPlenumSession", False),
+            is_service_session=data.get("isServiceSession", False),
             session_time_units=0,
             session_tags=[]
         )

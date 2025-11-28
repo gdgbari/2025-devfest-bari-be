@@ -192,10 +192,9 @@ def get_quiz_service(
     leaderboard_service: LeaderboardServiceDep,
     config_repository: ConfigRepositoryDep,
     session_service: SessionServiceDep,
-    tags_repository: TagsRepositoryDep
 ) -> QuizService:
     """Dependency to get QuizService with injected repositories and services"""
-    return QuizService(quiz_repository, user_repository, leaderboard_service, config_repository, session_service, tags_repository)
+    return QuizService(quiz_repository, user_repository, leaderboard_service, config_repository, session_service)
 
 QuizServiceDep = Annotated[QuizService, Depends(get_quiz_service)]
 
@@ -209,3 +208,15 @@ def get_tag_service(
     return TagService(tags_repository, user_service, leaderboard_service)
 
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
+
+
+from domain.services.admin_service import AdminService
+
+def get_admin_service(
+    user_repository: UserRepositoryDep,
+    leaderboard_repository: LeaderboardRepositoryDep
+) -> AdminService:
+    """Dependency to get AdminService with injected repositories"""
+    return AdminService(user_repository, leaderboard_repository)
+
+AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
