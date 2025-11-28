@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth
 from infrastructure.errors.auth_errors import ForbiddenError, UnauthorizedError
 from pydantic import BaseModel, EmailStr
+import traceback
 
 
 class UserToken(BaseModel):
@@ -38,7 +39,6 @@ def verify_id_token(
     Verify firebase token ID, if valid gets back user data, otherwise throw HTTPException.
     Also verifies that the user still exists in Firebase Auth.
     """
-    authClientDep = AuthClientDep
 
     token = creds.credentials
     try:

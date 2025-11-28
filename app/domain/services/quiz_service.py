@@ -11,6 +11,7 @@ from infrastructure.errors.quiz_errors import (
     QuizAlreadySubmittedError,
     QuizTimeUpError,
     ReadQuizError,
+    QuizAllSessionsAlreadyCompletedError,
 )
 from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
@@ -190,10 +191,28 @@ class QuizService:
         if existing_result:
             raise QuizAlreadySubmittedError("You have already submitted this quiz")
 
-
-
         # Check if user already has a start time
         start_time = self.user_repository.get_quiz_start_time(user_id, quiz_id)
+        
+        # Check if user has already completed all slots for this quiz session
+        # Only check if user hasn't started the quiz yet (start_time is None)
+        # If they started, they should be allowed to continue/finish even if slots are taken (edge case?)
+        # Actually, if they started, the timer is running. 
+        # But the requirement is "non permettere la lettura... se ha tutti gli slot".
+        # So we should check it.
+        
+        current_session_slots = self.session_service.get_slots_for_session(quiz.session_id)
+        completed_slots = self._get_user_completed_slots(user_id)
+        print(f"DEBUG: Current session slots: {current_session_slots}")
+        print(f"DEBUG: Completed slots: {completed_slots}")
+        
+        # Filter current slots excluding those in completed slots
+        new_slots = [s for s in current_session_slots if s not in completed_slots]
+        
+        if len(new_slots) == 0:
+            print("LOL")
+            raise QuizAllSessionsAlreadyCompletedError("You have already completed all sessions for this quiz")
+
         current_time = int(time.time() * 1000)  # milliseconds
 
         if not start_time:
@@ -238,27 +257,12 @@ class QuizService:
         score, max_score = self._calculate_score(quiz, answers)
 
         # Apply session multiplier
-        # Apply session multiplier
         # 1. Get slots for current session
         current_session_slots = self.session_service.get_slots_for_session(quiz.session_id)
         print(f"DEBUG: Session {quiz.session_id} slots: {len(current_session_slots)}")
         
         # 2. Get slots for all completed quizzes
-        completed_quiz_ids = self.user_repository.get_completed_quiz_ids(user_id)
-        
-        # We need to map quiz_id -> session_id to get slots
-        # Optimization: Read all quizzes once (cached in repository or we can read them)
-        # Since we need session_id for each completed quiz
-        all_quizzes = self.quiz_repository.read_all()
-        quiz_session_map = {q.quiz_id: q.session_id for q in all_quizzes}
-        
-        completed_slots = set()
-        for c_quiz_id in completed_quiz_ids:
-            if c_quiz_id in quiz_session_map:
-                s_id = quiz_session_map[c_quiz_id]
-                s_slots = self.session_service.get_slots_for_session(s_id)
-                for slot in s_slots:
-                    completed_slots.add(slot)
+        completed_slots = self._get_user_completed_slots(user_id)
         
         print(f"DEBUG: Completed slots: {len(completed_slots)}")
                     
@@ -371,5 +375,25 @@ class QuizService:
                 and answers[question.question_id] == question.correct_answer
             ):
                 score += question.value
-
+            
         return score, max_score
+
+    def _get_user_completed_slots(self, user_id: str) -> set:
+        """
+        Retrieves all slots from sessions of quizzes completed by the user.
+        """
+        completed_quiz_ids = self.user_repository.get_completed_quiz_ids(user_id)
+        
+        # Optimization: Read all quizzes once
+        all_quizzes = self.quiz_repository.read_all()
+        quiz_session_map = {q.quiz_id: q.session_id for q in all_quizzes}
+        
+        completed_slots = set()
+        for c_quiz_id in completed_quiz_ids:
+            if c_quiz_id in quiz_session_map:
+                s_id = quiz_session_map[c_quiz_id]
+                s_slots = self.session_service.get_slots_for_session(s_id)
+                for slot in s_slots:
+                    completed_slots.add(slot)
+        return completed_slots
+

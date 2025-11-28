@@ -189,6 +189,11 @@ class SessionService:
         """
         Calculates slots based on minimum session duration and maps them to sessions.
         """
+        # 0. Clean session times (strip seconds/microseconds) for accurate slot calculation
+        for s in sessions:
+            s.starts_at = s.starts_at.replace(second=0, microsecond=0)
+            s.ends_at = s.ends_at.replace(second=0, microsecond=0)
+
         # 1. Find minimum session duration (excluding service sessions)
         # We consider service sessions as those marked as is_service_session or is_plenum_session
         non_service_sessions = [
@@ -209,51 +214,49 @@ class SessionService:
             
         min_duration = timedelta(seconds=min_duration_seconds)
 
-        # 2. Define event start and end
-        all_starts = [s.starts_at for s in sessions]
-        all_ends = [s.ends_at for s in sessions]
+        # 2. Generate slots for each session
+        # Instead of a global grid, we generate slots starting from each session's start time.
+        # This ensures alignment even if there are gaps (service sessions).
         
-        if not all_starts:
-            return
-
-        event_start = min(all_starts)
-        event_end = max(all_ends)
-
-        # 3. Generate slots
-        slots = []
-        current_time = event_start
-        while current_time + min_duration <= event_end:
-            slot_end = current_time + min_duration
-            slots.append(Slot(start=current_time, end=slot_end))
-            current_time = slot_end
-
-        # 4. Filter out slots in service sessions
+        # Collect service sessions for filtering
         service_sessions = [
             s for s in sessions 
             if s.is_service_session or s.is_plenum_session
         ]
-        
-        valid_slots = []
-        for slot in slots:
-            is_service = False
-            for ss in service_sessions:
-                # Check if slot overlaps with service session
-                # Overlap if slot.start < ss.end and slot.end > ss.start
-                if slot.start < ss.ends_at and slot.end > ss.starts_at:
-                    is_service = True
-                    break
-            if not is_service:
-                valid_slots.append(slot)
 
-        # 5. Map sessions to slots
         self._session_slots_map.clear()
-        for session in sessions:
-            session_slots = []
-            for slot in valid_slots:
-                # Check if slot is fully contained within session
-                if slot.start >= session.starts_at and slot.end <= session.ends_at:
-                    session_slots.append(slot)
+        
+        all_generated_slots = set()
+
+        current = min(s.starts_at for s in sessions)
+        max_ends_at = max(s.ends_at for s in sessions)
+
+       # Generate slots within the session duration
+        while current + min_duration < max_ends_at:
+            slot = Slot(start=current, end=current + min_duration)
             
-            if session_slots:
-                self._session_slots_map[session.id] = session_slots
+            # Check if slot overlaps with ANY service session
+            service_session_ptr = None
+            for ss in service_sessions:
+                if slot.start < ss.ends_at or slot.end > ss.starts_at:
+                    service_session_ptr = ss
+                    break
+
+            if not service_session_ptr:
+                all_generated_slots.add(slot)    
+                current += min_duration
+            else:
+                current = service_session_ptr.ends_at
+
+        for session in sessions:
+            if session.is_service_session or session.is_plenum_session:
+                continue
+            session_slots = [s for s in all_generated_slots if s.start >= session.starts_at and s.end <= session.ends_at]
+            self._session_slots_map[session.id] = session_slots
+            current = session.starts_at
+            
+        print(f"DEBUG: Total unique slots generated: {len(all_generated_slots)}")
+        for slot in sorted(list(all_generated_slots), key=lambda s: s.start):
+            print(f"DEBUG: Slot: {slot}")
+
 
