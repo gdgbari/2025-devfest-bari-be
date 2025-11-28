@@ -61,29 +61,22 @@ class SessionService:
             List of sessions
         """
         # Get all sessions from all groups
-        groups_data = await self.sessionize_client.get_sessions()
-
+        grid_smart_data = await self.sessionize_client.get_grid_smart()
         # Extract all sessions from all groups
         all_raw_sessions = []
-        for group in groups_data:
-            all_raw_sessions.extend(group["sessions"])
-
+        for day_data in grid_smart_data:
+            for data in day_data["rooms"]:
+                all_raw_sessions.extend(data["sessions"])
         # Parse sessions
         sessions = [Session.from_dict(session) for session in all_raw_sessions]
 
-        # Filter and calculate time units
-        filtered_sessions = self._filter_sessions(sessions)
-
-        # Assign session tags based on start time
-        sessions_with_tags = self._assign_session_tags(filtered_sessions)
-
         # Update quizzes with sessions
-        self._update_quizzes_with_sessions(sessions_with_tags)
+        self._update_quizzes_with_sessions(sessions)
 
         # Calculate and map slots
-        self._calculate_and_map_slots(sessions_with_tags)
+        self._calculate_and_map_slots(sessions)
 
-        return sessions_with_tags
+        return sessions
 
 
     def _filter_sessions(self, sessions: List[Session]) -> List[Session]:
@@ -224,7 +217,7 @@ class SessionService:
             if s.is_service_session or s.is_plenum_session
         ]
 
-        print("SERVICES", service_sessions)
+        print("SERVICES", sessions)
 
         self._session_slots_map.clear()
         
