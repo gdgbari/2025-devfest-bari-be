@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, status
 
 from api.adapters.tags.update_tag_adapter import UpdateTagAdapter
-from api.schemas.tags.update_tag_schema import UpdateTagRequest, UpdateTagResponse
+from api.schemas.tags.update_tag_schema import UpdateTagRequest
+from api.schemas.tags.read_tag_schema import GetTagResponse
+from api.adapters.tags.read_tag_adapter import ReadTagAdapter
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import TagServiceDep
 from domain.entities.tag import Tag
+from domain.entities.user import User
 
 router = APIRouter(prefix="/tags", tags=["Tags"])
 
@@ -12,7 +15,7 @@ router = APIRouter(prefix="/tags", tags=["Tags"])
 @router.put(
     "/{tag_id}",
     description="Update tag information in Firestore by tag ID",
-    response_model=UpdateTagResponse,
+    response_model=GetTagResponse,
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "Tag updated successfully"},
@@ -27,8 +30,8 @@ def update_tag(
     tag_id: str,
     tag_update: UpdateTagRequest,
     tag_service: TagServiceDep,
-    user_token=Depends(verify_id_token),
-) -> UpdateTagResponse:
+    user_token: User = Depends(verify_id_token),
+) -> GetTagResponse:
     """Update a tag"""
 
     # Check if user has staff role
@@ -40,4 +43,3 @@ def update_tag(
     )
 
     return UpdateTagAdapter.to_update_response(updated_tag)
-

@@ -60,9 +60,6 @@ class FirebaseAuthClient:
             display_name=display_name,
             email_verified=True
         )
-        self.update_custom_claims(
-            user_record.uid, {"user_role": "attendee", "checked_in": False}
-        )
         return user_record.uid
 
     def read_user(self, uid: str) -> Dict[str, Any]:

@@ -112,20 +112,26 @@ class UserRepository:
         return the user updated. If email is present in the updated fields is gonna
         update also the authentication
         """
-        if user_update[self.USER_EMAIL]:
+        if user_update.get(self.USER_EMAIL):
             # Update in Firebase Auth
             self.auth_repository.update_user_auth(current_user.uid, user_update)
 
         # Update in Firestore
         self.firestore_repository.update_user(current_user.uid, user_update)
 
+        # Handle role update if present
+        role = current_user.role
+        if "role" in user_update and user_update["role"]:
+            from domain.entities.role import Role
+            role = Role(user_update["role"])
+
         return User(
             uid=current_user.uid,
-            email=user_update[self.USER_EMAIL] if user_update[self.USER_EMAIL] is not None else current_user.email,
-            name=user_update[self.USER_NAME] if user_update[self.USER_NAME] is not None else current_user.name,
-            surname=user_update[self.USER_SURNAME] if user_update[self.USER_SURNAME] is not None else current_user.surname,
+            email=user_update.get(self.USER_EMAIL) if user_update.get(self.USER_EMAIL) is not None else current_user.email,
+            name=user_update.get(self.USER_NAME) if user_update.get(self.USER_NAME) is not None else current_user.name,
+            surname=user_update.get(self.USER_SURNAME) if user_update.get(self.USER_SURNAME) is not None else current_user.surname,
             nickname=current_user.nickname,
-            role=current_user.role,
+            role=role,
             group=current_user.group
         )
 
@@ -135,7 +141,8 @@ class UserRepository:
         Assigns a group to a user.
         """
         self.firestore_repository.assign_group_to_user(uid, gid)
-        self.auth_repository.update_custom_claims(uid=uid, claims={"checked_in": True})
+        # Update checked_in status in Firestore
+        self.firestore_repository.update_user(uid, {"checked_in": True})
 
         return self.read(uid)
 
@@ -162,6 +169,20 @@ class UserRepository:
             return QuizResult.from_dict(data)
         except DocumentNotFoundError:
             return None
+
+
+    def get_all_quiz_results(self, uid: str) -> List[QuizResult]:
+        """
+        Get all quiz results for a user.
+        """
+        try:
+            results = self.firestore_repository.read_all_from_subcollection(
+                document_id=uid,
+                subcollection=self.QUIZ_RESULTS_COLLECTION
+            )
+            return [QuizResult.from_dict(result) for result in results]
+        except Exception:
+            return []
 
 
     def get_completed_quiz_ids(self, uid: str) -> List[str]:

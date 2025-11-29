@@ -25,7 +25,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 )
 def read_all_users(
     user_service: UserServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetUserListResponse:
 
     check_user_role(user_token)
@@ -48,7 +48,7 @@ def read_all_users(
 )
 def read_current_user(
     user_service: UserServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetUserResponse:
 
     uid = user_token.uid
@@ -73,11 +73,11 @@ def read_current_user(
 def read_user(
     uid: str,
     user_service: UserServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetUserResponse:
 
     check_user_role(
-        user_token=user_token,
+        user=user_token,
         allow_owner=True,
         uid=uid,
     )

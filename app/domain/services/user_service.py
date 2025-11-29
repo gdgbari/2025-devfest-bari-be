@@ -88,6 +88,12 @@ class UserService:
         self.user_repository.add_tags(uid, tags)
         return self.read_user(uid)
 
+    def get_user_quiz_results(self, uid: str) -> List[dict]:
+        """
+        Get all quiz results for a user.
+        """
+        return self.user_repository.get_all_quiz_results(uid)
+
     def _load_user_tags(self, tag_ids: Optional[List[str]]) -> Optional[List[Tag]]:
         """
         Loads Tag objects from tags collection using tag_ids.

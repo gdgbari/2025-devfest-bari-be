@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import GroupServiceDep
+from domain.entities.user import User
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
 
@@ -43,9 +44,12 @@ def delete_all_groups(
 def delete_group(
     gid: str,
     group_service: GroupServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> None:
-
+    """
+    Delete a group.
+    """
     check_user_role(user_token)
-    group_service.delete_group(gid)
 
+    group_service.delete_group(group_id)
+    return None

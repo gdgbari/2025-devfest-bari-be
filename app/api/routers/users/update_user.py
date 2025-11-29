@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, status
 
 from api.adapters.users.update_user_adapter import UpdateUserAdapters
-from api.schemas.users.update_user_schema import (UpdateUserRequest,
-                                                  UpdateUserResponse)
+from api.schemas.users.update_user_schema import UpdateUserRequest
+from api.schemas.users.read_user_schema import GetUserResponse
+from api.adapters.users.read_user_adapter import ReadUserAdapters
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import UserServiceDep
 from domain.entities.user import User
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 @router.put(
     "/{uid}",
     description="Update user information in Firebase Auth and Firestore",
-    response_model=UpdateUserResponse,
+    response_model=GetUserResponse,
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "User updated successfully"},
@@ -28,13 +29,12 @@ def update_user(
     uid: str,
     user_update: UpdateUserRequest,
     user_service: UserServiceDep,
-    user_token=Depends(verify_id_token),
-) -> UpdateUserResponse:
+    user_token: User = Depends(verify_id_token),
+) -> GetUserResponse:
+    """
+    Update a user.
+    """
+    check_user_role(user_token, allow_owner=True, uid=uid)
 
-    check_user_role(
-        user_token=user_token,
-        allow_owner=True,
-        uid=uid,
-    )
-    updated_user: User = user_service.update_user(uid, user_update.model_dump())
-    return UpdateUserAdapters.to_update_response(updated_user)
+    updated_user: User = user_service.update_user(uid, user_update.model_dump(exclude_unset=True))
+    return ReadUserAdapters.to_get_user_response(updated_user)

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, status
 
-from api.adapters.users.check_in_adapter import CheckInAdapter
-from api.schemas.users.check_in_schema import CheckInResponse
-from core.authorization import verify_id_token, check_user_checked_in
+from api.adapters.users.read_user_adapter import ReadUserAdapters
+from api.schemas.users.read_user_schema import GetUserResponse
+from core.authorization import verify_id_token, check_user_checked_in, check_user_role
 from core.dependencies import CheckInServiceDep
 from domain.entities.user import User
+from domain.entities.role import Role
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 @router.post(
     "/check-in",
     description="Assign a group to the current authenticated user using round-robin",
-    response_model=CheckInResponse,
+    response_model=GetUserResponse,
     status_code=status.HTTP_200_OK,
     responses={
         200: {"description": "Group assigned successfully"},
@@ -25,14 +26,15 @@ router = APIRouter(prefix="/users", tags=["Users"])
 )
 def assign_group_to_current_user(
     check_in_service: CheckInServiceDep,
-    user_token=Depends(verify_id_token),
-) -> CheckInResponse:
+    user_token: User = Depends(verify_id_token),
+) -> GetUserResponse:
     """
-    Assigns a group to the current user.
+    Check in a user.
     """
-    check_user_checked_in(user_token=user_token, is_checked_in=False)
-    uid = user_token.uid
+    check_user_role(user_token, min_role=Role.ATTENDEE)
+    
+    # Check if user has already checked in
+    check_user_checked_in(user_token, is_checked_in=False)
 
-    updated_user: User = check_in_service.check_in(uid=uid)
-
-    return CheckInAdapter.to_response(updated_user)
+    user = check_in_service.check_in(user_token.uid)
+    return ReadUserAdapters.to_get_user_response(user)

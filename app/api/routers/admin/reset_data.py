@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException
-from core.dependencies import get_admin_service
+from core.dependencies import AdminServiceDep
 from domain.services.admin_service import AdminService
+from domain.entities.user import User
 from core.authorization import verify_id_token, check_user_role
 from domain.entities.role import Role
 
@@ -18,14 +19,14 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
     }
 )
 def reset_data(
-    admin_service: AdminService = Depends(get_admin_service),
-    user_token=Depends(verify_id_token),
-):
+    admin_service: AdminServiceDep,
+    user_token: User = Depends(verify_id_token),
+) -> dict:
     """
     Resets all data in the system.
     """
     # Check if user is admin
-    check_user_role(user_token)
+    check_user_role(user_token, min_role=Role.OWNER)
 
     admin_service.reset_all_data()
 

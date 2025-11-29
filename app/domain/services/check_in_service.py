@@ -37,7 +37,11 @@ class CheckInService:
         # Check if user already has a group assigned
         user = self.user_service.read_user(uid)
         if user.group is not None:
-            raise ForbiddenError()
+            # If user already has a group, ensure checked_in is True and return user
+            if not user.checked_in:
+                self.user_service.update_user(uid, {"checked_in": True})
+                user.checked_in = True
+            return user
 
         # Check if check-in is open
         if not self.config_service.is_check_in_open():

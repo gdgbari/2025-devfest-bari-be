@@ -16,7 +16,7 @@ class CreateUserAdapter:
             surname=user.surname,
             nickname=user.nickname,
             password=user.password,
-            role=Role.ATTENDEE.value,
+            role=user.role,
             group=None
         )
 
@@ -28,4 +28,5 @@ class CreateUserAdapter:
             name=user.name,
             surname=user.surname,
             nickname=user.nickname,
+            role=user.role.value if user.role else "attendee"
         )

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import QuizServiceDep
+from domain.entities.user import User
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 
@@ -22,12 +23,12 @@ router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 def delete_quiz(
     quiz_id: str,
     quiz_service: QuizServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> None:
-    """Delete a quiz by ID"""
-
-    # Check if user has staff role
+    """
+    Delete a quiz.
+    """
     check_user_role(user_token)
 
     quiz_service.delete_quiz(quiz_id)
-
+    return None

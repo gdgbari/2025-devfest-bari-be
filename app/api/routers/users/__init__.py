@@ -5,6 +5,7 @@ from .delete_user import router as delete_user_router
 from .read_user import router as read_user_router
 from .update_user import router as update_user_router
 from .check_in import router as check_in_router
+from .get_user_quiz_results import router as get_user_quiz_results_router
 
 router = APIRouter()
 
@@ -13,3 +14,4 @@ router.include_router(read_user_router)
 router.include_router(update_user_router)
 router.include_router(delete_user_router)
 router.include_router(check_in_router)
+router.include_router(get_user_quiz_results_router)

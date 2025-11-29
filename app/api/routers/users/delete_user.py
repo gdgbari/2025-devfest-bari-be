@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import UserServiceDep
+from domain.entities.user import User
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -22,12 +23,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def delete_user(
     uid: str,
     user_service: UserServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> None:
+    """
+    Delete a user.
+    """
+    check_user_role(user_token, allow_owner=True, uid=uid)
 
-    check_user_role(
-        user_token=user_token,
-        allow_owner=True,
-        uid=uid,
-    )
     user_service.delete_user(uid)
+    return None

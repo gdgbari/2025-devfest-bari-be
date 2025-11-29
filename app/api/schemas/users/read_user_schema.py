@@ -8,6 +8,8 @@ class GetUserResponse(UserBaseSchema):
     uid: str
     group: Optional[Dict[str, Any]] = None
     tags: Optional[List[GetTagResponse]] = None
+    checked_in: bool = False
+    role: Optional[str] = None
 
 
 class GetUserListResponse(BaseModel):

@@ -5,6 +5,7 @@ from api.schemas.groups.read_group_schema import (GetGroupListResponse,
                                                   GetGroupResponse)
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import GroupServiceDep
+from domain.entities.user import User
 from domain.entities.group import Group
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -25,10 +26,13 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
 )
 def read_all_groups(
     group_service: GroupServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetGroupListResponse:
-
+    """
+    Get all groups.
+    """
     check_user_role(user_token)
+
     groups: list[Group] = group_service.read_all_groups()
     return ReadGroupAdapters.to_get_groups_response(groups)
 

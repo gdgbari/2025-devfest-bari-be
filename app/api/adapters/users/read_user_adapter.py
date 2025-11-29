@@ -27,7 +27,9 @@ class ReadUserAdapters:
             surname=user.surname,
             nickname=user.nickname,
             group=user.group,
-            tags=tags_response
+            tags=tags_response,
+            checked_in=user.checked_in,
+            role=user.role.value if user.role else None
         )
 
     @staticmethod

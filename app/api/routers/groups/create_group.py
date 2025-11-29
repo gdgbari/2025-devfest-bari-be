@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, status
 
 from api.adapters.groups.create_group_adapter import CreateGroupAdapter
-from api.schemas.groups.create_group_schema import (CreateGroupRequest,
-                                                    CreateGroupResponse)
+from api.schemas.groups.create_group_schema import CreateGroupRequest
+from api.schemas.groups.read_group_schema import GetGroupResponse
+from api.adapters.groups.read_group_adapter import ReadGroupAdapters
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import GroupServiceDep
 from domain.entities.group import Group
+from domain.entities.user import User
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
 
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
 @router.post(
     "",
     description="Endpoint for creating a new Group in database",
-    response_model=CreateGroupResponse,
+    response_model=GetGroupResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
         201: {"description": "Group created successfully"},
@@ -25,14 +27,15 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
     },
 )
 def create_group(
-    request: CreateGroupRequest,
+    group_request: CreateGroupRequest,
     group_service: GroupServiceDep,
-    user_token=Depends(verify_id_token),
-) -> CreateGroupResponse:
-
+    user_token: User = Depends(verify_id_token),
+) -> GetGroupResponse:
+    """
+    Create a new group.
+    """
     check_user_role(user_token)
     new_group: Group = group_service.create_group(
-        CreateGroupAdapter.to_create_group_domain(request)
+        CreateGroupAdapter.to_group(group_request)
     )
-    return CreateGroupAdapter.to_create_group_response(new_group)
-
+    return ReadGroupAdapters.to_get_group_response(new_group)

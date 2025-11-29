@@ -9,6 +9,8 @@ from api.schemas.tags.assign_tag_schema import (
 )
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import TagServiceDep
+from domain.entities.user import User
+from domain.entities.role import Role
 
 router = APIRouter(prefix="/tags", tags=["Tags"])
 

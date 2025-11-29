@@ -5,6 +5,7 @@ from api.schemas.tags.read_tag_schema import GetTagListResponse, GetTagResponse
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import TagServiceDep
 from domain.entities.tag import Tag
+from domain.entities.user import User
 
 router = APIRouter(prefix="/tags", tags=["Tags"])
 
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/tags", tags=["Tags"])
 )
 def read_all_tags(
     tag_service: TagServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetTagListResponse:
     """Get all tags"""
 
@@ -50,11 +51,12 @@ def read_all_tags(
 def read_tag(
     tag_id: str,
     tag_service: TagServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetTagResponse:
-    """Get a tag by ID"""
-
+    """
+    Get a tag by ID.
+    """
     check_user_role(user_token)
-    tag: Tag = tag_service.read_tag(tag_id)
-    return ReadTagAdapter.to_get_tag_response(tag)
 
+    tag = tag_service.read_tag(tag_id)
+    return ReadTagAdapter.to_get_tag_response(tag)

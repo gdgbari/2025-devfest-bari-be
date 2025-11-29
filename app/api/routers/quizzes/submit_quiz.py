@@ -6,6 +6,7 @@ from api.schemas.quizzes.submit_quiz_schema import (
 )
 from core.authorization import check_user_checked_in, check_user_role, verify_id_token
 from core.dependencies import QuizServiceDep
+from domain.entities.user import User
 from domain.entities.role import Role
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
@@ -32,7 +33,7 @@ async def submit_quiz(
     quiz_id: str,
     request: SubmitQuizRequest,
     quiz_service: QuizServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> SubmitQuizResponse:
     """
     Submit quiz answers and get the score.
@@ -59,7 +60,7 @@ async def submit_quiz(
     score, max_score = await quiz_service.submit_quiz(
         quiz_id,
         answers_dict,
-        user_token.user_id
+        user_token.uid
     )
 
     return SubmitQuizResponse(score=score, max_score=max_score)

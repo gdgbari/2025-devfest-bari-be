@@ -5,6 +5,7 @@ from core.authorization import (check_user_checked_in, check_user_role,
                                 verify_id_token)
 from core.dependencies import QuizServiceDep
 from domain.entities.quiz import Quiz
+from domain.entities.user import User
 from domain.entities.role import Role
 from fastapi import APIRouter, Depends, status
 
@@ -26,7 +27,7 @@ router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 )
 def read_all_quizzes(
     quiz_service: QuizServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetQuizListWithCorrectResponse:
     """Get all quizzes with correct answers. Staff only - returns all quizzes regardless of is_open status."""
 
@@ -59,7 +60,7 @@ def read_all_quizzes(
 async def read_quiz(
     quiz_id: str,
     quiz_service: QuizServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> GetQuizResponse:
     """
     Get a quiz by ID and start timer on first access.
@@ -84,7 +85,7 @@ async def read_quiz(
 
     # Read quiz from database and manage timer (service checks if quiz is open and time is valid)
     # Also ensures sessions are synced before reading
-    quiz: Quiz = await quiz_service.read_quiz(quiz_id, user_token.user_id)
+    quiz: Quiz = await quiz_service.read_quiz(quiz_id, user_token.uid)
 
     # Convert to response without exposing answers
     return ReadQuizAdapter.to_get_quiz_response(quiz)

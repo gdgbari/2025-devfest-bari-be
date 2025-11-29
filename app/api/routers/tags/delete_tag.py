@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from core.authorization import check_user_role, verify_id_token
 from core.dependencies import TagServiceDep
+from domain.entities.user import User
 
 router = APIRouter(prefix="/tags", tags=["Tags"])
 
@@ -22,12 +23,13 @@ router = APIRouter(prefix="/tags", tags=["Tags"])
 def delete_tag(
     tag_id: str,
     tag_service: TagServiceDep,
-    user_token=Depends(verify_id_token),
+    user_token: User = Depends(verify_id_token),
 ) -> None:
-    """Delete a tag"""
-
+    """
+    Delete a tag.
+    """
     # Check if user has staff role
     check_user_role(user_token)
 
     tag_service.delete_tag(tag_id)
-
+    return None

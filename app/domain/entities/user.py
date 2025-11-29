@@ -18,6 +18,7 @@ class User(BaseModel):
     role: Optional[Role] = None
     group: Optional[Dict[str, Any]] = None
     tags: Optional[List[Tag]] = None  # List of Tag objects
+    checked_in: bool = False
 
     @field_validator("role", mode="before")
     @classmethod
@@ -41,6 +42,7 @@ class User(BaseModel):
             role=data["role"] if "role" in data else None,
             group=data["group"] if "group" in data else None,
             tags=tags,  # Tags loaded from tags collection
+            checked_in=data.get("checked_in", False),
         )
 
     def to_firestore_data(self) -> dict:
@@ -54,7 +56,8 @@ class User(BaseModel):
             "surname": self.surname,
             "nickname": self.nickname,
             "role": self.role.value,
-            "group": self.group
+            "group": self.group,
+            "checked_in": self.checked_in
         }
         if self.tags is not None:
             # Save tag_ids (documentIds) to Firestore

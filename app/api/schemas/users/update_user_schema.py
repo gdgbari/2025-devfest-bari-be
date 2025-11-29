@@ -9,7 +9,9 @@ class UpdateUserRequest(BaseModel):
     email: Optional[str] = None
     name: Optional[str] = None
     surname: Optional[str] = None
+    role: Optional[str] = None
 
 class UpdateUserResponse(UserBaseSchema):
     uid: str
     group: Optional[Dict[str, Any]] = None
+    role: Optional[str] = None

@@ -240,14 +240,19 @@ class FirestoreRepository:
         """
         try:
             update_params = {}
-            if user_data[self.USER_EMAIL]:
+            if user_data.get(self.USER_EMAIL):
                 update_params[self.USER_EMAIL] = user_data[self.USER_EMAIL]
-            if user_data[self.USER_NAME]:
+            if user_data.get(self.USER_NAME):
                 update_params[self.USER_NAME] = user_data[self.USER_NAME]
-            if user_data[self.USER_SURNAME]:
+            if user_data.get(self.USER_SURNAME):
                 update_params[self.USER_SURNAME] = user_data[self.USER_SURNAME]
+            if user_data.get("role"):
+                update_params["role"] = user_data["role"]
+            if "checked_in" in user_data:
+                update_params["checked_in"] = user_data["checked_in"]
 
-            self.firestore_client.update_doc(self.USERS_COLLECTION, doc_id=uid, doc_data=update_params)
+            if update_params:
+                self.firestore_client.update_doc(self.USERS_COLLECTION, doc_id=uid, doc_data=update_params)
         except DocumentNotFoundError:
             raise UpdateUserError(message=f"User was not found", http_status=404)
         except Exception:

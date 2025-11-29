@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, status
 
 from core.dependencies import SessionServiceDep
 from core.authorization import check_user_role, verify_id_token
+from domain.entities.user import User
+from domain.entities.role import Role
 from api.adapters.sessionize.sync_sessions_adapter import SyncSessionsAdapter
 from api.schemas.sessionize.sync_sessions_schema import SyncSessionsResponse
 
@@ -15,15 +17,12 @@ router = APIRouter()
 )
 async def sync_sessions(
     session_service: SessionServiceDep,
-    user_token=Depends(verify_id_token),
-) -> SyncSessionsResponse:
+    user_token: User = Depends(verify_id_token),
+) -> None:
     """
-    Syncs Sessionize sessions with quizzes.
-    Updates each quiz's sessions field based on session_id.
-    Requires staff role.
+    Manually trigger session sync from Sessionize.
     """
-    check_user_role(user_token)
-
-    sessions = await session_service.map_sessions_to_quizzes()
-
-    return SyncSessionsAdapter.to_sync_sessions_response(sessions)
+    check_user_role(user_token, min_role=Role.STAFF)
+    
+    await session_service.sync_sessions()
+    return None
