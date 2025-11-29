@@ -118,8 +118,8 @@ class QuizService:
         quiz = self.quiz_repository.read(quiz_id)
 
         # Check if quiz is open
-        if not quiz.is_open:
-            raise ReadQuizError("Quiz is not open", http_status=not_open_status)
+        #if not quiz.is_open:
+        #    raise ReadQuizError("Quiz is not open", http_status=not_open_status)
 
         return quiz
 
@@ -203,14 +203,12 @@ class QuizService:
         
         current_session_slots = self.session_service.get_slots_for_session(quiz.session_id)
         completed_slots = self._get_user_completed_slots(user_id)
-        print(f"DEBUG: Current session slots: {current_session_slots}")
-        print(f"DEBUG: Completed slots: {completed_slots}")
         
         # Filter current slots excluding those in completed slots
         new_slots = [s for s in current_session_slots if s not in completed_slots]
         
-        if len(new_slots) == 0:
-            print("LOL")
+        # Only restrict if there ARE slots for this session, but none are new (all completed)
+        if len(current_session_slots) > 0 and len(new_slots) == 0:
             raise QuizAllSessionsAlreadyCompletedError("You have already completed all sessions for this quiz")
 
         current_time = int(time.time() * 1000)  # milliseconds
@@ -259,24 +257,14 @@ class QuizService:
         # Apply session multiplier
         # 1. Get slots for current session
         current_session_slots = self.session_service.get_slots_for_session(quiz.session_id)
-        print(f"DEBUG: Session {quiz.session_id} slots: {len(current_session_slots)}")
         
         # 2. Get slots for all completed quizzes
         completed_slots = self._get_user_completed_slots(user_id)
-        
-        print(f"DEBUG: Completed slots: {len(completed_slots)}")
-                    
-        # 3. Filter current slots excluding those in completed slots
-        # We use string representation or tuple for comparison if Slot is not hashable/comparable directly
-        # But Slot has __hash__, so we can try direct comparison if it works. 
-        # To be safe, let's compare start and end times.
         
         new_slots = []
         for slot in current_session_slots:
             if slot not in completed_slots:
                 new_slots.append(slot)
-
-        print(f"DEBUG: New slots: {len(new_slots)}")
 
         # Calculate multiplier: number of new slots
         multiplier = len(new_slots)
