@@ -3,3 +3,6 @@
 .venv/**
 **/.env
 app/secrets/
+.coverage
+htmlcov/
+.pytest_cache/
