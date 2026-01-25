@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devfest-bari-2025-api"
+version = "1.0.0"
+description = "Backend API for DevFest Bari 2025 - Quiz and session management system"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "GDG Bari, Marco Franceschini, Federico Carrozzino, Domingo Dirutigliano" }
+]
+keywords = ["fastapi", "firebase", "quiz", "sessionize", "devfest"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Framework :: FastAPI"
+]
+
+dependencies = [
+  "fastapi[standard]",
+  "uvicorn[standard]",
+  "pydantic",
+  "pydantic[email]",
+  "pydantic-settings",
+  "firebase-admin",
+  "google-cloud-firestore",
+  "httpx",
+  "cachetools"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.5",
+  "pytest-asyncio>=0.23.0",
+  "pytest-mock>=3.12.0",
+  "python-dotenv>=1.1.0",
+  "faker>=22.0.0"
+]
+
+[tool.setuptools]
+package-dir = { "" = "app" }
+
+[tool.setuptools.packages.find]
+where = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["app/tests"]
+pythonpath = ["app"]
+addopts = "-v -s"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

@@ -3,7 +3,6 @@ Shared pytest fixtures for all tests
 """
 import pytest
 from unittest.mock import Mock, MagicMock
-from typing import Dict, List, Optional
 
 from domain.entities.user import User
 from domain.entities.quiz import Quiz

@@ -7,7 +7,6 @@ from domain.services.check_in_service import CheckInService
 from domain.entities.user import User
 from domain.entities.role import Role
 from infrastructure.errors.config_errors import CheckInNotOpenError
-from infrastructure.errors.auth_errors import ForbiddenError
 
 
 @pytest.mark.unit
