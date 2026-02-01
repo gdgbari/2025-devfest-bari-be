@@ -11,15 +11,6 @@ class CreateUserService:
     Service that manages all the operations related with the creation of a user
     """
 
-    # Collection names
-    QUIZ_RESULTS_COLLECTION: str = "quiz_results"
-    QUIZ_START_TIMES_COLLECTION: str = "quiz_start_times"
-
-    # User field names
-    USER_EMAIL: str = "email"
-    USER_NAME: str = "name"
-    USER_SURNAME: str = "surname"
-
     def __init__(
         self,
         auth_repository: AuthRepository,
