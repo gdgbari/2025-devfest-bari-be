@@ -4,3 +4,5 @@
 **/.env
 app/secrets/
 .pytest_cache/
+.idea/
+.venv/
