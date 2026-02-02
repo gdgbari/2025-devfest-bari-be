@@ -1,7 +1,7 @@
 import time
 
 from infrastructure.clients.firestore_client import FirestoreClient
-from infrastructure.errors.user_errors import CreateUserError
+from infrastructure.errors.leaderboard_errors import CreateLeaderboardUserEntryError
 from domain.entities.user import User
 
 
@@ -14,9 +14,9 @@ class UserLeaderboardRepository:
     def __init__(self, firestore_client: FirestoreClient):
         self.firestore_client = firestore_client
 
-    def create_user_entry(self, user: User) -> None:
+    def save(self, user: User) -> None:
         """
-        Creates a leaderboard entry for a new user.
+        Saves a leaderboard entry for a new user.
         """
         try:
             leaderboard_data = {
@@ -31,7 +31,7 @@ class UserLeaderboardRepository:
                 doc_data=leaderboard_data
             )
         except Exception:
-            raise CreateUserError(f"Failed to create leaderboard entry", http_status=400)
+            raise CreateLeaderboardUserEntryError(f"Failed to create leaderboard entry", http_status=400)
         
     def _get_timestamp(self) -> int:
         """

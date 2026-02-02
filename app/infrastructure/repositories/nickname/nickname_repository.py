@@ -1,5 +1,8 @@
 from infrastructure.clients.firestore_client import FirestoreClient
 from infrastructure.errors.user_errors import ReserveNicknameError
+from infrastructure.errors.firestore_errors import *
+from infrastructure.errors.user_errors import DeleteUserError
+
 
 class NicknameRepository:
     """
@@ -15,9 +18,9 @@ class NicknameRepository:
         self.firestore_client = firestore_client
 
 
-    def reserve_nickname(self, nickname: str) -> None:
+    def save(self, nickname: str) -> None:
         """
-        Reserves a nickname by creating a document in the Firestore 'nicknames' collection.
+        Saves a nickname by creating a document in the Firestore 'nicknames' collection.
 
         The nickname is normalized (lowercase, no whitespace) for storage in the nicknames
         collection to ensure uniqueness, but the original nickname is preserved in the users collection.
@@ -41,3 +44,18 @@ class NicknameRepository:
         Converts to lowercase and removes whitespace.
         """
         return nickname.lower().replace(" ", "")
+    
+
+    def delete_nickname(self, nickname: str) -> None:
+        """
+        Deletes a nickname reservation from the Firestore 'nicknames' collection.
+        """
+        try:
+            self.firestore_client.delete_doc(
+                collection_name=self.NICKNAMES_COLLECTION, 
+                doc_id=self._normalize_nickname(nickname)
+            )
+        except DocumentNotFoundError:
+            raise DeleteUserError(message=f"Nickname not found", http_status=404)
+        except Exception:
+            raise DeleteUserError(message=f"Failed to delete nickname", http_status=400)
