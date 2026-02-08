@@ -3,7 +3,7 @@ from fastapi import APIRouter, status
 from api.adapters.users.create_user_adapter import CreateUserAdapter
 from api.schemas.users.create_user_schema import (CreateUserRequest,
                                                   CreateUserResponse)
-from core.dependencies import UserServiceDep
+from core.dependencies import CreateUserServiceDep
 from domain.entities.user import User
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -23,10 +23,10 @@ router = APIRouter(prefix="/users", tags=["Users"])
 )
 def create_user(
     request: CreateUserRequest,
-    user_service: UserServiceDep,
+    create_user_service: CreateUserServiceDep,
 ) -> CreateUserResponse:
 
-    new_user: User = user_service.create_user(
+    new_user: User = create_user_service.create(
         CreateUserAdapter.to_create_user_domain(request)
     )
     return CreateUserAdapter.to_create_user_response(new_user)

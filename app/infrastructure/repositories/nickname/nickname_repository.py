@@ -46,7 +46,7 @@ class NicknameRepository:
         return nickname.lower().replace(" ", "")
     
 
-    def delete_nickname(self, nickname: str) -> None:
+    def delete(self, nickname: str) -> None:
         """
         Deletes a nickname reservation from the Firestore 'nicknames' collection.
         """

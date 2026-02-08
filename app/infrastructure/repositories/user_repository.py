@@ -9,7 +9,7 @@ from infrastructure.errors.user_errors import *
 from infrastructure.errors.auth_errors import *
 from infrastructure.errors.firestore_errors import DocumentNotFoundError
 
-class UserRepository:
+class UserEntityRepository:
     """
     Repository for managing all user operations coordinating firebase auth and firestore
     """
@@ -32,36 +32,6 @@ class UserRepository:
         self.auth_repository = auth_repository
         self.firestore_repository = firestore_repository
         self.leaderboard_repository = leaderboard_repository
-
-
-    def create(self, user: User) -> User:
-        """
-        Create a user with unique nickname, then in firebase auth, in firestore, and leaderboard entry.
-        If any exception happens at any step there is a rollback, in a way to keep consistent data.
-        """
-        try:
-            # Reserve a nickname in the nicknames collection to check univocity
-            self.firestore_repository.reserve_nickname(user.nickname)
-            # Create user in authentication
-            uid = self.auth_repository.create_user_authentication(user)
-            # Set UID for Firestore
-            user.uid = uid
-            # Create user data in Firestore
-            self.firestore_repository.create_user(user)
-            # Create leaderboard entry
-            self.leaderboard_repository.create_user_entry(uid, user.nickname)
-            # Return new user
-            return user
-        except AuthenticateUserError as e:
-            self.firestore_repository.delete_nickname(user.nickname)
-            raise e
-        except CreateUserError as e:
-            self.firestore_repository.delete_nickname(user.nickname)
-            if hasattr(user, 'uid') and user.uid:
-                self.auth_repository.delete_auth(user.uid)
-                # Try to delete leaderboard entry if it was created
-                self.leaderboard_repository.delete_user_entry(user.uid)
-            raise e
 
 
     def delete(self, uid: str, nickname: str) -> None:

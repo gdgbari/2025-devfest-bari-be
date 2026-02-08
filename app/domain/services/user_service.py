@@ -1,7 +1,7 @@
 from typing import List, Optional
 from domain.entities.user import User
 from domain.entities.tag import Tag
-from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.repositories.user_repository import UserEntityRepository
 from infrastructure.repositories.tags_repository import TagsRepository
 from domain.services.group_service import GroupService
 
@@ -13,20 +13,13 @@ class UserService:
 
     def __init__(
         self,
-        user_repository: UserRepository,
+        user_repository: UserEntityRepository,
         group_service: GroupService,
         tags_repository: TagsRepository
     ):
         self.user_repository = user_repository
         self.group_service = group_service
         self.tags_repository = tags_repository
-
-
-    def create_user(self, user: User) -> User:
-        """
-        Creates a user in database.
-        """
-        return self.user_repository.create(user)
 
 
     def read_user(self, uid: str) -> User:

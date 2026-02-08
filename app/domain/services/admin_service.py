@@ -1,4 +1,4 @@
-from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.repositories.user_repository import UserEntityRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 
 class AdminService:
@@ -8,7 +8,7 @@ class AdminService:
 
     def __init__(
         self,
-        user_repository: UserRepository,
+        user_repository: UserEntityRepository,
         leaderboard_repository: LeaderboardRepository
     ):
         self.user_repository = user_repository

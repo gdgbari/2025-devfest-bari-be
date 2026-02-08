@@ -57,7 +57,7 @@ class CreateUserService:
         """
         Rollback if auth repository had an error
         """
-        self.nickname_repository.delete_nickname(user.nickname)
+        self.nickname_repository.delete(user.nickname)
 
 
     def _handle_create_error(self, user: User) -> None:
@@ -74,5 +74,5 @@ class CreateUserService:
         Rollback if user leaderboard repository had an error
         """
         self._handle_create_error(user)
-        self.user_repository.delete_user(user.uid)
+        self.user_repository.delete(user.uid)
 

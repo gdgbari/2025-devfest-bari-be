@@ -20,11 +20,15 @@ from infrastructure.repositories.group_repository import GroupRepository
 from infrastructure.repositories.leaderboard_repository import LeaderboardRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
 from infrastructure.repositories.tags_repository import TagsRepository
-from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.repositories.user_repository import UserEntityRepository
 from domain.services.tag_service import TagService
 from domain.services.session_service import SessionService
 from infrastructure.clients.sessionize_client import SessionizeClient
-
+from infrastructure.repositories.auth.auth_repository import AuthRepository
+from infrastructure.repositories.nickname.nickname_repository import NicknameRepository
+from infrastructure.repositories.leaderboard.user_leaderboard_repository import UserLeaderboardRepository
+from infrastructure.repositories.user.user_repository import UserRepository
+from domain.services.user.create_user_service import CreateUserService
 
 @lru_cache()
 def get_auth_client() -> FirebaseAuthClient:
@@ -48,11 +52,56 @@ FirestoreClientDep = Annotated[FirestoreClient, Depends(get_firestore_client)]
 
 def get_auth_repository(
     auth_client: AuthClientDep
+) -> AuthRepository:
+    """Dependency to get AuthRepository instance"""
+    return AuthRepository(auth_client)
+
+AuthRepositoryDep = Annotated[AuthRepository, Depends(get_auth_repository)]
+
+def get_nickname_repository(
+    auth_client: AuthClientDep
+) -> NicknameRepository:
+    """Dependency to get NicknameRepository instance"""
+    return NicknameRepository(auth_client)
+
+NicknameRepositoryDep = Annotated[NicknameRepository, Depends(get_nickname_repository)]
+
+def get_user_leaderboard_repository(
+    auth_client: AuthClientDep
+) -> UserLeaderboardRepository:
+    """Dependency to get UserLeaderboardRepository instance"""
+    return UserLeaderboardRepository(auth_client)
+
+UserLeaderboardRepositoryDep = Annotated[UserLeaderboardRepository, Depends(get_user_leaderboard_repository)]
+
+def get_user_repository(
+    auth_client: AuthClientDep
+) -> UserRepository:
+    """Dependency to get UserRepository instance"""
+    return UserRepository(auth_client)
+
+UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
+
+def get_create_user_service(
+    auth_repository: AuthRepositoryDep,
+    nickname_repository: NicknameRepositoryDep,
+    user_repository: UserRepositoryDep,
+    user_leaderboard_repository: UserLeaderboardRepositoryDep
+) -> CreateUserService:
+    """Dependency to get CreateUserService instance"""
+    return CreateUserService(auth_repository, nickname_repository, user_repository, user_leaderboard_repository)
+
+CreateUserServiceDep = Annotated[CreateUserService, Depends(get_create_user_service)]
+
+### Old dependencies
+
+def get_firebase_auth_repository(
+    auth_client: AuthClientDep
 ) -> FirebaseAuthRepository:
     """Dependency to get AuthRepository instance"""
     return FirebaseAuthRepository(auth_client)
 
-AuthRepositoryDep = Annotated[FirebaseAuthRepository, Depends(get_auth_repository)]
+FirebaseAuthRepositoryDep = Annotated[FirebaseAuthRepository, Depends(get_firebase_auth_repository)]
 
 def get_firestore_repository(
     firestore_client: FirestoreClientDep
@@ -78,15 +127,16 @@ def get_leaderboard_service(
 
 LeaderboardServiceDep = Annotated[LeaderboardService, Depends(get_leaderboard_service)]
 
-def get_user_repository(
-    auth_repository: AuthRepositoryDep,
+### Old UserRepository
+def get_user_entity_repository(
+    auth_repository: FirebaseAuthRepositoryDep,
     firestore_repository: FirestoreRepositoryDep,
     leaderboard_repository: LeaderboardRepositoryDep
-) -> UserRepository:
-    """Dependency to get UserRepository instance"""
-    return UserRepository(auth_repository, firestore_repository, leaderboard_repository)
+) -> UserEntityRepository:
+    """Dependency to get UserEntityRepository instance"""
+    return UserEntityRepository(auth_repository, firestore_repository, leaderboard_repository)
 
-UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
+UserEntityRepositoryDep = Annotated[UserEntityRepository, Depends(get_user_entity_repository)]
 
 def get_group_repository(
     firestore_client: FirestoreClientDep
@@ -115,7 +165,7 @@ GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]
 
 
 def get_user_service(
-    user_repository: UserRepositoryDep,
+    user_repository: UserEntityRepositoryDep,
     group_service: GroupServiceDep,
     tags_repository: TagsRepositoryDep
 ) -> UserService:
@@ -188,7 +238,7 @@ SessionServiceDep = Annotated[SessionService, Depends(get_session_service)]
 
 def get_quiz_service(
     quiz_repository: QuizRepositoryDep,
-    user_repository: UserRepositoryDep,
+    user_repository: UserEntityRepositoryDep,
     leaderboard_service: LeaderboardServiceDep,
     config_repository: ConfigRepositoryDep,
     session_service: SessionServiceDep,
@@ -213,7 +263,7 @@ TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 from domain.services.admin_service import AdminService
 
 def get_admin_service(
-    user_repository: UserRepositoryDep,
+    user_repository: UserEntityRepositoryDep,
     leaderboard_repository: LeaderboardRepositoryDep
 ) -> AdminService:
     """Dependency to get AdminService with injected repositories"""

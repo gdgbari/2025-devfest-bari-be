@@ -29,26 +29,6 @@ class LeaderboardRepository:
         return int(time.time() * 1000)
 
 
-    def create_user_entry(self, uid: str, nickname: str) -> None:
-        """
-        Creates a leaderboard entry for a new user.
-        """
-        try:
-            leaderboard_data = {
-                "group_color": self.DEFAULT_GROUP_COLOR,
-                "nickname": nickname,
-                "score": 0,
-                "updated_at": self._get_timestamp()
-            }
-            self.firestore_client.create_doc(
-                collection_name=self.LEADERBOARD_USER_COLLECTION,
-                doc_id=uid,
-                doc_data=leaderboard_data
-            )
-        except Exception as e:
-            raise CreateUserError(f"Failed to create leaderboard entry", http_status=400)
-
-
     def delete_user_entry(self, uid: str) -> None:
         """
         Deletes a leaderboard entry for a user.

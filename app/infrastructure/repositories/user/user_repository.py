@@ -34,7 +34,7 @@ class UserRepository:
             raise CreateUserError(message=f"Failed to create user", http_status=400)
         
 
-    def delete_user(self, uid: str) -> None:
+    def delete(self, uid: str) -> None:
         """
         Deletes a user from the Firestore 'users' collection.
         """

@@ -6,6 +6,9 @@ from domain.entities.user import User
 
 
 class UserLeaderboardRepository:
+    """
+    Repository to manage all the operations with user leaderboard table.
+    """
 
     LEADERBOARD_USER_COLLECTION: str = "leaderboard_users"
     DEFAULT_GROUP_COLOR: str = "black"
