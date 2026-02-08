@@ -1,6 +1,6 @@
 from typing import Optional
 
-from core.dependencies import UserRepositoryDep
+from core.dependencies import UserEntityRepositoryDep
 from domain.entities.role import Role
 from domain.entities.user import User
 from fastapi import Depends, HTTPException, status
@@ -14,7 +14,7 @@ token_auth_scheme = HTTPBearer()
 
 
 def verify_id_token(
-    user_repository: UserRepositoryDep,
+    user_repository: UserEntityRepositoryDep,
     creds: HTTPAuthorizationCredentials = Depends(token_auth_scheme),
 ) -> User:
     """

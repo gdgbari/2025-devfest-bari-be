@@ -29,29 +29,6 @@ class FirestoreRepository:
         self.firestore_client = firestore_client
 
 
-    def create_user(self, user_data: User) -> None:
-        """
-        Creates a new user document in the Firestore 'users' collection.
-
-        This method stores user profile data (email, name, surname, nickname) in Firestore
-        using the Firebase Auth UID as the document ID. This should be called AFTER the user
-        has been created in Firebase Auth and has a valid UID assigned.
-
-        Raises:
-            CreateUserError: If user document creation fails. Specific scenarios:
-                - HTTP 409: A user document with this UID already exists in Firestore
-                - HTTP 400: Invalid user data or other Firestore operation errors
-        """
-        try:
-            self.firestore_client.create_doc(
-                collection_name=self.USERS_COLLECTION, doc_id=user_data.uid, doc_data=user_data.to_firestore_data()
-            )
-        except Exception as exception:
-            if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
-                raise CreateUserError(message=f"User already existing", http_status=409)
-            raise CreateUserError(message=f"Failed to create user", http_status=400)
-
-
     def _normalize_nickname(self, nickname: str) -> str:
         """
         Normalizes a nickname for storage in the nicknames collection.
@@ -64,34 +41,6 @@ class FirestoreRepository:
             Normalized nickname (lowercase, no whitespace)
         """
         return nickname.lower().replace(" ", "")
-
-    def reserve_nickname(self, nickname: str) -> None:
-        """
-        Reserves a nickname by creating a document in the Firestore 'nicknames' collection.
-
-        The nickname is normalized (lowercase, no whitespace) for storage in the nicknames
-        collection to ensure uniqueness, but the original nickname is preserved in the users collection.
-
-        This method ensures nickname uniqueness across the application by attempting to create
-        a document with the normalized nickname as the document ID. Firestore's
-        document ID uniqueness constraint guarantees that no two users can have the same nickname
-        (case-insensitive and ignoring whitespace).
-
-        This should be called BEFORE creating the user in Firebase Auth to fail fast if the
-        nickname is already taken, preventing orphaned authentication records.
-
-        Raises:
-            ReserveNicknameError: If nickname reservation fails. Specific scenarios:
-                - HTTP 409: Nickname is already taken by another user
-                - HTTP 400: Invalid nickname format or other Firestore operation errors
-        """
-        normalized_nickname = self._normalize_nickname(nickname)
-        try:
-            self.firestore_client.create_doc(self.NICKNAMES_COLLECTION, doc_id=normalized_nickname)
-        except Exception as exception:
-            if "ALREADY_EXISTS" in str(exception) or "already exists" in str(exception).lower():
-                raise ReserveNicknameError(message=f"Nickname already existing", http_status=409)
-            raise ReserveNicknameError(message=f"Failed to create nickname", http_status=400)
 
 
     def _resolve_group_reference(self, user_data: dict) -> None:

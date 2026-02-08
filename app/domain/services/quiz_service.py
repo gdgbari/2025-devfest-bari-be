@@ -15,7 +15,7 @@ from infrastructure.errors.quiz_errors import (
 )
 from infrastructure.repositories.config_repository import ConfigRepository
 from infrastructure.repositories.quiz_repository import QuizRepository
-from infrastructure.repositories.user_repository import UserRepository
+from infrastructure.repositories.user_repository import UserEntityRepository
 from infrastructure.repositories.tags_repository import TagsRepository
 from domain.services.session_service import SessionService
 from domain.services.leaderboard_service import LeaderboardService
@@ -32,7 +32,7 @@ class QuizService:
     def __init__(
         self,
         quiz_repository: QuizRepository,
-        user_repository: UserRepository,
+        user_repository: UserEntityRepository,
         leaderboard_service: LeaderboardService,
         config_repository: ConfigRepository,
         session_service: SessionService,

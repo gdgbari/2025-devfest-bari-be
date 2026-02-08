@@ -6,6 +6,7 @@ from infrastructure.errors.group_errors import *
 from infrastructure.errors.config_errors import *
 from infrastructure.errors.quiz_errors import *
 from infrastructure.errors.tag_errors import *
+from infrastructure.errors.leaderboard_errors import *
 
 def register_exception_handlers(app: FastAPI):
     """Register all global exception handlers"""
@@ -138,6 +139,10 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(AssignTagError)
     async def assign_tag_error_handler(request: Request, exc: AssignTagError):
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+    
+    @app.exception_handler(CreateLeaderboardUserEntryError)
+    async def create_leaderboard_user_entry_error_handler(request: Request, exc: CreateLeaderboardUserEntryError):
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     @app.exception_handler(Exception)

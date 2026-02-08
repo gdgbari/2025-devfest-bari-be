@@ -21,32 +21,6 @@ class FirebaseAuthRepository:
         self.auth_client = auth_client
 
 
-    def create_user_authentication(self, user_data: User) -> str:
-        """
-        Creates a new user in Firebase Authentication.
-
-        This method creates a user account in Firebase Auth with email/password authentication.
-        The display name is automatically generated from the user's name and surname.
-
-        Raises:
-            AuthenticateUserError: If user creation fails. Specific scenarios:
-                - HTTP 409: Email already exists in Firebase Auth
-                - HTTP 400: Invalid user data or other Firebase Auth errors
-        """
-        try:
-            display_name = f"{user_data.name} {user_data.surname}".strip()
-            uid = self.auth_client.create_user(
-                email=user_data.email,
-                password=user_data.password,
-                display_name=display_name,
-            )
-            return uid
-        except EmailAlreadyExistsError:
-            raise AuthenticateUserError(message=f"Email already exsiting", http_status=409)
-        except Exception as exception:
-            raise AuthenticateUserError(message=f"Failed to authenticate the user", http_status=400)
-
-
     def update_user_auth(self, uid: str, user_data: dict):
         """
         Updates authentication information for an existing user in Firebase Authentication.
