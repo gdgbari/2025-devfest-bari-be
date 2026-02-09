@@ -58,6 +58,9 @@ pythonpath = ["app"]
 addopts = "-v -s"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
+markers = [
+  "unit: Unit tests with mocked dependencies",
+]
 
 [tool.ruff]
 line-length = 100

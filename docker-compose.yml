@@ -6,6 +6,8 @@ services:
     image: devfest-bari-2025-api
     container_name: devfest-bari-2025-api-container
     working_dir: /app
+    volumes:
+      - ./app:/app
     environment:
       - PYTHONPATH=/app
     ports:
