@@ -16,7 +16,7 @@ class User(BaseModel):
     uid: Optional[str] = None
     password: Optional[str] = None
     role: Optional[Role] = None
-    group: Optional[Dict[str, Any]] = None
+    group: Optional[Dict[str, Any]] = None # TODO: change to Group
     tags: Optional[List[Tag]] = None  # List of Tag objects
     checked_in: bool = False
 
