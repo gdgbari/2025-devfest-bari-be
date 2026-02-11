@@ -59,7 +59,7 @@ class UserService:
 
         # Decrement group counter if user has a group assigned
         if user.group:
-            group_id = user.group.get("gid")
+            group_id = user.group.gid
             if group_id:
                 self.group_service.decrement_user_count(group_id)
 

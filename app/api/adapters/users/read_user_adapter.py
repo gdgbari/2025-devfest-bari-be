@@ -26,7 +26,7 @@ class ReadUserAdapters:
             name=user.name,
             surname=user.surname,
             nickname=user.nickname,
-            group=user.group,
+            group=user.group.model_dump() if user.group else None,
             tags=tags_response,
             checked_in=user.checked_in,
             role=user.role.value if user.role else None

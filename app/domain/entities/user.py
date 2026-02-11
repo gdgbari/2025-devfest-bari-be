@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, field_validator
 
 from domain.entities.role import Role
 from domain.entities.tag import Tag
+from domain.entities.group import Group
 
 class User(BaseModel):
     """"
@@ -16,7 +17,7 @@ class User(BaseModel):
     uid: Optional[str] = None
     password: Optional[str] = None
     role: Optional[Role] = None
-    group: Optional[Dict[str, Any]] = None # TODO: change to Group
+    group: Optional[Group] = None
     tags: Optional[List[Tag]] = None  # List of Tag objects
     checked_in: bool = False
 
@@ -28,7 +29,11 @@ class User(BaseModel):
         return v
 
     @staticmethod
-    def from_dict(data: dict, tags: Optional[List[Tag]] = None) -> "User":
+    def from_dict(
+        data: dict,
+        tags: Optional[List[Tag]] = None,
+        group: Optional[Group] = None
+    ) -> "User":
         """
         Creates User from dict.
         Tags are passed separately as they need to be loaded from tags collection.
@@ -40,7 +45,7 @@ class User(BaseModel):
             nickname=data["nickname"],
             uid=data["uid"] if "uid" in data else None,
             role=data["role"] if "role" in data else None,
-            group=data["group"] if "group" in data else None,
+            group=group,
             tags=tags,  # Tags loaded from tags collection
             checked_in=data.get("checked_in", False),
         )
@@ -56,7 +61,7 @@ class User(BaseModel):
             "surname": self.surname,
             "nickname": self.nickname,
             "role": self.role.value,
-            "group": self.group,
+            "group": None,
             "checked_in": self.checked_in
         }
         if self.tags is not None:

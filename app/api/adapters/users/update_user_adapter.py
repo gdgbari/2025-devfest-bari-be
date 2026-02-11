@@ -15,6 +15,6 @@ class UpdateUserAdapters:
             name=user.name,
             surname=user.surname,
             nickname=user.nickname,
-            group=user.group,
+            group=user.group.model_dump() if user.group else None,
             role=user.role.value if user.role else None
         )

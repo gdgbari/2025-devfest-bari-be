@@ -64,8 +64,8 @@ class CheckInService:
         Helper method to create or update leaderboard entries for a user and a group.
         """
         if user.group:
-            group_name = user.group.get("name")
-            group_color = user.group.get("color")
+            group_name = user.group.name
+            group_color = user.group.color
 
             if group_name and group_color:
                 self.leaderboard_repository.create_group_entry(

@@ -20,6 +20,6 @@ class LeaderboardService:
         """
         self.leaderboard_repository.increment_user_score(user.uid, score)
 
-        if user.group and user.group.get("gid"):
-            group_id = user.group.get("gid")
+        if user.group and user.group.gid:
+            group_id = user.group.gid
             self.leaderboard_repository.increment_group_score(group_id, score)
