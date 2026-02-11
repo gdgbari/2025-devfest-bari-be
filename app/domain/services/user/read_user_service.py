@@ -33,8 +33,6 @@ class ReadUserService:
         if group_ref is not None and hasattr(group_ref, "id"):
             group = self.group_repository.find_by_gid(group_ref.id)
 
-        user: User = User.from_dict(user_data)
-        user.group = group
-        user.tags = self.tag_repository.find_by_tag_ids(user_data.get("tags"))
-
+        tags = self.tag_repository.find_by_tag_ids(user_data.get("tags"))
+        user: User = User.from_dict(user_data, group=group, tags=tags)
         return user

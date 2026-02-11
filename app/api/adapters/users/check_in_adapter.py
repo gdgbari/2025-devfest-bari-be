@@ -9,5 +9,5 @@ class CheckInAdapter:
     @staticmethod
     def to_response(user: User) -> CheckInResponse:
         return CheckInResponse(
-            group=user.group,
+            group=user.group.model_dump() if user.group else None,
         )
