@@ -281,3 +281,225 @@ class TestReadUserService:
             read_user_service.read_user("test-uid-123")
 
         assert exc_info.value.status_code == 404
+
+    def test_read_all_users_success_with_group_and_tags(
+        self,
+        read_user_service,
+        mock_user_repository,
+        mock_group_repository,
+        mock_tag_repository,
+        sample_group,
+        sample_tags,
+    ):
+        """Test successful read_all returns list of Users with group and tags loaded"""
+        group_ref_1 = Mock()
+        group_ref_1.id = "group-123"
+        group_ref_2 = Mock()
+        group_ref_2.id = "group-123"
+
+        mock_user_repository.find_all.return_value = [
+            {
+                "uid": "uid-1",
+                "email": "alice@example.com",
+                "name": "Alice",
+                "surname": "Smith",
+                "nickname": "alice",
+                "role": "attendee",
+                "group_ref": group_ref_1,
+                "tags": ["tag-1", "tag-2"],
+                "checked_in": False,
+            },
+            {
+                "uid": "uid-2",
+                "email": "bob@example.com",
+                "name": "Bob",
+                "surname": "Jones",
+                "nickname": "bob",
+                "role": "attendee",
+                "group_ref": group_ref_2,
+                "tags": ["tag-1", "tag-2"],
+                "checked_in": True,
+            },
+        ]
+        mock_group_repository.find_by_gid.return_value = sample_group
+        mock_tag_repository.find_by_tag_ids.return_value = sample_tags
+
+        result = read_user_service.read_all_users()
+
+        assert len(result) == 2
+        assert result[0] == User(
+            uid="uid-1",
+            email="alice@example.com",
+            name="Alice",
+            surname="Smith",
+            nickname="alice",
+            role=Role.ATTENDEE,
+            group=sample_group,
+            tags=sample_tags,
+            checked_in=False,
+        )
+        assert result[1] == User(
+            uid="uid-2",
+            email="bob@example.com",
+            name="Bob",
+            surname="Jones",
+            nickname="bob",
+            role=Role.ATTENDEE,
+            group=sample_group,
+            tags=sample_tags,
+            checked_in=True,
+        )
+        mock_user_repository.find_all.assert_called_once()
+        assert mock_group_repository.find_by_gid.call_count == 2
+        assert mock_tag_repository.find_by_tag_ids.call_count == 2
+
+    def test_read_all_users_success_without_group(
+        self,
+        read_user_service,
+        mock_user_repository,
+        mock_group_repository,
+        mock_tag_repository,
+        sample_tags,
+    ):
+        """Test read_all_users when users have no group assigned"""
+        mock_user_repository.find_all.return_value = [
+            {
+                "uid": "uid-1",
+                "email": "alice@example.com",
+                "name": "Alice",
+                "surname": "Smith",
+                "nickname": "alice",
+                "role": "attendee",
+                "group_ref": None,
+                "tags": ["tag-1", "tag-2"],
+                "checked_in": False,
+            },
+        ]
+        mock_tag_repository.find_by_tag_ids.return_value = sample_tags
+
+        result = read_user_service.read_all_users()
+
+        assert len(result) == 1
+        assert result[0] == User(
+            uid="uid-1",
+            email="alice@example.com",
+            name="Alice",
+            surname="Smith",
+            nickname="alice",
+            role=Role.ATTENDEE,
+            group=None,
+            tags=sample_tags,
+            checked_in=False,
+        )
+        mock_group_repository.find_by_gid.assert_not_called()
+
+    def test_read_all_users_success_without_tags(
+        self,
+        read_user_service,
+        mock_user_repository,
+        mock_group_repository,
+        mock_tag_repository,
+        sample_group,
+    ):
+        """Test read_all_users when users have no tags"""
+        group_ref = Mock()
+        group_ref.id = "group-123"
+
+        mock_user_repository.find_all.return_value = [
+            {
+                "uid": "uid-1",
+                "email": "alice@example.com",
+                "name": "Alice",
+                "surname": "Smith",
+                "nickname": "alice",
+                "role": "attendee",
+                "group_ref": group_ref,
+                "tags": [],
+                "checked_in": False,
+            },
+        ]
+        mock_group_repository.find_by_gid.return_value = sample_group
+        mock_tag_repository.find_by_tag_ids.return_value = None
+
+        result = read_user_service.read_all_users()
+
+        assert len(result) == 1
+        assert result[0] == User(
+            uid="uid-1",
+            email="alice@example.com",
+            name="Alice",
+            surname="Smith",
+            nickname="alice",
+            role=Role.ATTENDEE,
+            group=sample_group,
+            tags=None,
+            checked_in=False,
+        )
+
+    def test_read_all_users_empty_list(
+        self,
+        read_user_service,
+        mock_user_repository,
+        mock_group_repository,
+        mock_tag_repository,
+    ):
+        """Test read_all_users returns empty list when no users exist"""
+        mock_user_repository.find_all.return_value = []
+
+        result = read_user_service.read_all_users()
+
+        assert result == []
+        mock_group_repository.find_by_gid.assert_not_called()
+        mock_tag_repository.find_by_tag_ids.assert_not_called()
+
+    def test_read_all_users_repository_raises_read_user_error(
+        self,
+        read_user_service,
+        mock_user_repository,
+        mock_group_repository,
+        mock_tag_repository,
+    ):
+        """Test that ReadUserError from user_repository.find_all propagates"""
+        mock_user_repository.find_all.side_effect = ReadUserError(
+            message="Failed to read all users", http_status=400
+        )
+
+        with pytest.raises(ReadUserError) as exc_info:
+            read_user_service.read_all_users()
+
+        assert exc_info.value.status_code == 400
+        mock_group_repository.find_by_gid.assert_not_called()
+        mock_tag_repository.find_by_tag_ids.assert_not_called()
+
+    def test_read_all_users_group_repository_raises_read_group_error(
+        self,
+        read_user_service,
+        mock_user_repository,
+        mock_group_repository,
+        mock_tag_repository,
+    ):
+        """Test that ReadGroupError from group_repository propagates during read_all_users"""
+        group_ref = Mock()
+        group_ref.id = "group-123"
+
+        mock_user_repository.find_all.return_value = [
+            {
+                "uid": "uid-1",
+                "email": "alice@example.com",
+                "name": "Alice",
+                "surname": "Smith",
+                "nickname": "alice",
+                "role": "attendee",
+                "group_ref": group_ref,
+                "tags": ["tag-1"],
+                "checked_in": False,
+            },
+        ]
+        mock_group_repository.find_by_gid.side_effect = ReadGroupError(
+            message="Group not found", http_status=404
+        )
+
+        with pytest.raises(ReadGroupError) as exc_info:
+            read_user_service.read_all_users()
+
+        assert exc_info.value.status_code == 404
