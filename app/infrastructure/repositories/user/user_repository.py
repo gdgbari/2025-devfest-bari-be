@@ -10,6 +10,7 @@ class UserRepository:
     """
 
     USERS_COLLECTION: str = "users"
+    USER_ID: str = "uid"
 
 
     def __init__(
@@ -72,3 +73,28 @@ class UserRepository:
             raise ReadUserError(message=f"User was not found", http_status=404)
         except Exception:
             raise ReadUserError(message=f"Failed to read user", http_status=400)
+
+
+    def find_all(self) -> list[dict]:
+        """
+        Retrieves all user documents from the Firestore 'users' collection.
+
+        This method fetches all user profile data stored in Firestore and returns them as a list
+        of dictionaries. Each dictionary includes the UID as a field for convenient processing.
+
+        Raises:
+            ReadUserError: If retrieving users fails. Specific scenarios:
+                - HTTP 400: Firestore operation errors or collection access issues
+        """
+        try:
+            users = self.firestore_client.read_all_docs(
+                collection_name=self.USERS_COLLECTION,
+                include_id=True,
+                id_field_name=self.USER_ID,
+            )
+            for user in users:
+                user["group_ref"] = user.get("group")
+                user["group"] = None
+            return users
+        except Exception:
+            raise ReadUserError(message=f"Failed to read all users", http_status=400)
