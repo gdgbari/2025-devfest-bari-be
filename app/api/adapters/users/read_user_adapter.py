@@ -34,7 +34,7 @@ class ReadUserAdapters:
 
     @staticmethod
     def to_get_users_response(
-        users: list[User],
+        users: List[User],
     ) -> GetUserListResponse:
         return GetUserListResponse(
             users=[
