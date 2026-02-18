@@ -1,10 +1,11 @@
+from typing import List
 from fastapi import APIRouter, Depends, status
 
 from api.adapters.users.read_user_adapter import ReadUserAdapters
 from api.schemas.users.read_user_schema import (GetUserListResponse,
                                                 GetUserResponse)
 from core.authorization import check_user_role, verify_id_token
-from core.dependencies import UserServiceDep
+from core.dependencies import ReadUserServiceDep
 from domain.entities.user import User
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -24,12 +25,12 @@ router = APIRouter(prefix="/users", tags=["Users"])
     },
 )
 def read_all_users(
-    user_service: UserServiceDep,
+    read_user_service: ReadUserServiceDep,
     user_token: User = Depends(verify_id_token),
 ) -> GetUserListResponse:
 
     check_user_role(user_token)
-    users: list[User] = user_service.read_all_users()
+    users: List[User] = read_user_service.read_all_users()
     return ReadUserAdapters.to_get_users_response(users)
 
 
@@ -47,12 +48,12 @@ def read_all_users(
     },
 )
 def read_current_user(
-    user_service: UserServiceDep,
+    read_user_service: ReadUserServiceDep,
     user_token: User = Depends(verify_id_token),
 ) -> GetUserResponse:
 
     uid = user_token.uid
-    user: User = user_service.read_user(uid)
+    user: User = read_user_service.read_user(uid)
     return ReadUserAdapters.to_get_user_response(user)
 
 
@@ -72,7 +73,7 @@ def read_current_user(
 )
 def read_user(
     uid: str,
-    user_service: UserServiceDep,
+    read_user_service: ReadUserServiceDep,
     user_token: User = Depends(verify_id_token),
 ) -> GetUserResponse:
 
@@ -81,5 +82,5 @@ def read_user(
         allow_owner=True,
         uid=uid,
     )
-    user: User = user_service.read_user(uid)
+    user: User = read_user_service.read_user(uid)
     return ReadUserAdapters.to_get_user_response(user)
